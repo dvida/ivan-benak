@@ -482,3 +482,65 @@ table.index .letter td { border-bottom: 1px solid var(--rule); font-style: norma
   .wcal-day { font-size: 16px; }
   .wcal-title { font-size: 22px; }
 }
+
+/* ---------- grouped navigation ---------- */
+.nav2 {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: stretch; gap: 10px;
+  padding: 10px 12px 12px; background: var(--paper-2); border-bottom: 1px solid var(--rule);
+}
+.ng-home {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-width: 92px; padding: 4px 10px; text-decoration: none; color: var(--ink); font-size: 15px; line-height: 1.2;
+  background: var(--paper); border: 2px outset var(--bevel-hi);
+  border-right-color: var(--bevel-lo); border-bottom-color: var(--bevel-lo);
+}
+.ng-home img { margin-bottom: 2px; }
+.ng-home small { font-size: 12px; font-style: italic; color: var(--ink-soft); }
+.ng-home:hover { background: var(--hi); }
+.ng-home[aria-current] { border-style: inset; background: #efe4c8; }
+.ng { border: 2px groove var(--bevel-hi); background: var(--paper); padding: 0 6px 6px; }
+.ng-label {
+  margin: 0 -6px 6px; padding: 2px 8px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  color: #fff; text-align: center;
+}
+.ng-label i { text-transform: none; letter-spacing: .02em; opacity: .85; }
+.ng-poet .ng-label { background: #5d6b3b; }      /* olive: the man */
+.ng-poems .ng-label { background: var(--red); }   /* embroidery red: the poems */
+.ng ul { display: flex; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.ng a {
+  display: block; padding: 2px 9px 3px; font-size: 14.5px; line-height: 1.2; text-align: center;
+  text-decoration: none; color: var(--ink); background: var(--paper-2);
+  border: 2px outset var(--bevel-hi); border-right-color: var(--bevel-lo); border-bottom-color: var(--bevel-lo);
+}
+.ng a small { display: block; font-size: 11.5px; font-style: italic; color: var(--ink-soft); }
+.ng a:hover { background: var(--hi); }
+.ng a[aria-current] { border-style: inset; border-color: var(--bevel-lo) var(--bevel-hi) var(--bevel-hi) var(--bevel-lo); background: #efe4c8; }
+.ng-poet a[aria-current] { box-shadow: inset 0 -3px 0 #5d6b3b; }
+.ng-poems a[aria-current] { box-shadow: inset 0 -3px 0 var(--red); }
+@media (max-width: 760px) {
+  .nav2 { gap: 6px; padding: 8px; }
+  .ng-home { flex-direction: row; gap: 6px; width: 100%; min-width: 0; padding: 3px 8px; }
+  .ng-home small::before { content: "· "; }
+  .ng-home img { width: 20px; height: 20px; margin: 0; }
+  .ng { width: 100%; }
+  .ng ul { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .ng a { font-size: 14px; }
+}
+/* tighter so Home + both groups fit on one line on desktop */
+.nav2 { gap: 8px; padding: 9px 8px 10px; }
+.ng { padding: 0 5px 5px; }
+.ng ul { gap: 4px; }
+.ng a { padding: 2px 7px 3px; font-size: 14px; }
+.ng-home { min-width: 84px; padding: 4px 8px; font-size: 14.5px; }
+.nav-toggle { display: none; }
+@media (max-width: 760px) {
+  .nav-toggle {
+    display: block; width: calc(100% - 16px); margin: 6px 8px; padding: 6px; font: inherit; font-size: 16px;
+    color: var(--ink); cursor: pointer; background: var(--paper);
+    border: 2px outset var(--bevel-hi); border-right-color: var(--bevel-lo); border-bottom-color: var(--bevel-lo);
+  }
+  .nav-toggle i { color: var(--ink-soft); font-size: 14px; }
+  .nav2 { display: none; }
+  body.nav-open .nav2 { display: flex; }
+  body.nav-open .nav-toggle { border-style: inset; }
+}

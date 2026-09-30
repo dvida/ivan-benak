@@ -19,17 +19,12 @@
   <img src="assets/img/orig/srce.gif" width="63" height="63" alt="">
 </header>
 <div class="vez" aria-hidden="true"></div>
-<nav><ul class="nav">
-<li><a href="index.html">Naslovnica<small>Home</small></a></li>
-<li><a href="zivotopis.html">Životopis<small>Biography</small></a></li>
-<li><a href="pjesme/index.html">Pjesme<small>Poems</small></a></li>
-<li><a href="trazilica.html">Pronađi pjesmu<small>Find a poem</small></a></li>
-<li><a href="knjige.html">Knjige<small>Books</small></a></li>
-<li><a href="uglazbljene.html">Uglazbljene pjesme<small>Songs</small></a></li>
-<li><a href="misao-dana.html" aria-current="page">Misao dana<small>Thought of the day</small></a></li>
-<li><a href="galerija.html">Galerija<small>Gallery</small></a></li>
-<li><a href="prijatelji.html">Riječi prijatelja<small>Words of friends</small></a></li>
-</ul></nav>
+<button type="button" class="nav-toggle" aria-expanded="false" aria-controls="nav2">&#9776; Izbornik <i lang="en">Menu</i></button>
+<nav class="nav2" id="nav2" aria-label="Izbornik / Menu">
+<a class="ng-home" href="index.html"><img src="assets/img/orig/srce.gif" width="30" height="30" alt="">Naslovnica<small>Home</small></a>
+<div class="ng ng-poet"><p class="ng-label">O pjesniku <i lang="en">The poet</i></p><ul><li><a href="zivotopis.html">Životopis<small>Biography</small></a></li><li><a href="knjige.html">Knjige<small>Books</small></a></li><li><a href="galerija.html">Galerija<small>Gallery</small></a></li><li><a href="prijatelji.html">Riječi prijatelja<small>Friends&#x27; words</small></a></li></ul></div>
+<div class="ng ng-poems on"><p class="ng-label">Pjesme <i lang="en">Poems</i></p><ul><li><a href="pjesme/index.html">Sve pjesme<small>All poems</small></a></li><li><a href="trazilica.html">Pronađi pjesmu<small>Find a poem</small></a></li><li><a href="misao-dana.html" aria-current="page">Misao dana<small>Thought of the day</small></a></li><li><a href="uglazbljene.html">Uglazbljene<small>Songs</small></a></li></ul></div>
+</nav>
 <div class="lang-toggle" role="group" aria-label="Jezik / Language">
   <button type="button" data-lang="hr" aria-pressed="true">Hrvatski</button>
   <button type="button" data-lang="both" aria-pressed="false">Oboje · Both</button>
@@ -38,6 +33,12 @@
 <main>
 <div class="lang-bar" aria-hidden="true"><span>Hrvatski · izvornik</span><span>English · translation</span></div>
 <div class="m title"><div class="hr" lang="hr"><h1>Misao dana</h1><p>Za svaki dan u godini po jedna misao iz njegovih pjesama, birana prema godišnjem dobu i blagdanima.</p></div><div class="en" lang="en"><h1>Thought of the day</h1><p>A thought from his poems for every day of the year, chosen to suit the season and the feast days.</p></div></div>
+
+<section class="qotd" id="qotd" data-root="">
+  <p class="kicker">Misao dana · Thought of the day <span class="qday" id="qday"></span></p>
+  <div class="m"><div class="hr" lang="hr"><blockquote>Jesenje kiše tjeraju ljeto,<br>lišće polako žuti.<br>Po cesti vjetar prašinu diže<br>i huči – valjda se ljuti.</blockquote><p class="src">— iz pjesme <a href="pjesme/dolazak-zime.html">Dolazak zime</a></p></div><div class="en" lang="en"><blockquote>The autumn rains are driving summer out,<br>the leaves are slowly turning yellow.<br>Along the road the wind whips up the dust<br>and howls: perhaps he&#x27;s cross, the fellow.</blockquote><p class="src">— from <a href="pjesme/dolazak-zime.html">The Coming of Winter</a></p></div></div>
+  <p class="qnav qnav-cal"><button type="button" id="qprev">&larr; jučer · yesterday</button> <button type="button" id="qtoday">danas · today</button> <button type="button" id="qnext">sutra · tomorrow &rarr;</button></p><p class="qnav" hidden><a href="misao-dana.html" id="qall" hidden>Misli za svaki dan u godini &rarr;</a> &nbsp;·&nbsp; <a href="misao-dana.html" lang="en">A thought for every day of the year &rarr;</a></p>
+</section>
 
 <div class="wcal" id="wcal">
   <div class="wcal-months" id="wcal-months"><button type="button" data-m="0">Sij<small>Jan</small></button><button type="button" data-m="1">Vel<small>Feb</small></button><button type="button" data-m="2">Ožu<small>Mar</small></button><button type="button" data-m="3">Tra<small>Apr</small></button><button type="button" data-m="4">Svi<small>May</small></button><button type="button" data-m="5">Lip<small>Jun</small></button><button type="button" data-m="6">Srp<small>Jul</small></button><button type="button" data-m="7">Kol<small>Aug</small></button><button type="button" data-m="8">Ruj<small>Sep</small></button><button type="button" data-m="9">Lis<small>Oct</small></button><button type="button" data-m="10">Stu<small>Nov</small></button><button type="button" data-m="11">Pro<small>Dec</small></button></div>
@@ -52,12 +53,6 @@
     <p class="wcal-key"><span class="k-occ"></span> blagdan ili spomendan · <i lang="en">feast or anniversary</i> &nbsp; <span class="k-pen">&#10002;</span> napisano na taj dan · <i lang="en">written on that day</i></p>
   </div>
 </div>
-
-<section class="qotd" id="qotd" data-root="">
-  <p class="kicker">Misao dana · Thought of the day <span class="qday" id="qday"></span></p>
-  <div class="m"><div class="hr" lang="hr"><blockquote>Jesenje kiše tjeraju ljeto,<br>lišće polako žuti.<br>Po cesti vjetar prašinu diže<br>i huči – valjda se ljuti.</blockquote><p class="src">— iz pjesme <a href="pjesme/dolazak-zime.html">Dolazak zime</a></p></div><div class="en" lang="en"><blockquote>The autumn rains are driving summer out,<br>the leaves are slowly turning yellow.<br>Along the road the wind whips up the dust<br>and howls: perhaps he&#x27;s cross, the fellow.</blockquote><p class="src">— from <a href="pjesme/dolazak-zime.html">The Coming of Winter</a></p></div></div>
-  <p class="qnav qnav-cal"><button type="button" id="qprev">&larr; jučer · yesterday</button> <button type="button" id="qtoday">danas · today</button> <button type="button" id="qnext">sutra · tomorrow &rarr;</button></p><p class="qnav" hidden><a href="misao-dana.html" id="qall" hidden>Misli za svaki dan u godini &rarr;</a> &nbsp;·&nbsp; <a href="misao-dana.html" lang="en">A thought for every day of the year &rarr;</a></p>
-</section>
 <noscript><p class="pending">Kalendar treba JavaScript. · <span lang="en">The calendar needs JavaScript.</span></p></noscript>
 </main>
 <footer class="foot">

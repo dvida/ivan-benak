@@ -7,6 +7,13 @@
     set: function (k, v) { try { window.localStorage.setItem(k, v); } catch (e) { /* private mode */ } }
   };
 
+  /* ---- menu toggle on phones ---- */
+  var nt = document.querySelector(".nav-toggle");
+  if (nt) nt.addEventListener("click", function () {
+    var open = document.body.classList.toggle("nav-open");
+    nt.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+
   /* ---- HR / EN / both toggle (only visible on narrow screens) ---- */
   function setLang(mode) {
     document.body.classList.remove("show-hr", "show-en", "show-both");
