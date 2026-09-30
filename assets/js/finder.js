@@ -150,7 +150,22 @@
 
   /* ---------------- results ---------------- */
   var input = document.getElementById("pq"), out = document.getElementById("presults");
+  var CATS = /(^|[^a-z])(mac[aeiu]?|macan|macak|mack[aeiu]?|mace|macic|mac[aeu]k|mjau|cat|cats|kitten|kittens|kitty|purr|meow)([^a-z]|$)/;
+  var catShown = false;
+  function kittenCheck(q) {   // easter egg: any cat word in the search brings the kitten
+    var hit = CATS.test(fold(q));
+    if (hit && !catShown) {
+      catShown = true;
+      var go = function (tries) {
+        if (window.BENAK_KITTEN) window.BENAK_KITTEN();
+        else if (tries < 20) setTimeout(function () { go(tries + 1); }, 150);
+      };
+      go(0);
+    }
+    if (!hit) catShown = false;
+  }
   function render(q) {
+    kittenCheck(q);
     var r = search(q), list = r.res;
     highlight(list);
     if (!q.trim()) { out.innerHTML = ""; return; }

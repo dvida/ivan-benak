@@ -180,6 +180,8 @@
     }, calm ? 0 : 1600);
   }
 
+  window.BENAK_KITTEN = kitten;       // also used by the Find-a-poem search (finder.js)
+
   /* ---------- triggers ---------- */
   var typed = "";
   document.addEventListener("keydown", function (e) {
