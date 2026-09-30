@@ -25,6 +25,17 @@
     }
     document.documentElement.lang = mode === "en" ? "en" : "hr";
     store.set("benak-lang", mode);
+    // English only: the Croatian column (with the page's <h1> and the list links) is hidden, so the English
+    // title becomes the level-1 heading and the English twin links join the Tab order (see build.py h1en, index_row)
+    var en = mode === "en", h = document.querySelectorAll(".h1-en"), dup = document.querySelectorAll("a.dup");
+    for (var j = 0; j < h.length; j++) {
+      if (en) { h[j].setAttribute("role", "heading"); h[j].setAttribute("aria-level", "1"); }
+      else { h[j].removeAttribute("role"); h[j].removeAttribute("aria-level"); }
+    }
+    for (var k = 0; k < dup.length; k++) {
+      if (en) { dup[k].removeAttribute("tabindex"); dup[k].removeAttribute("aria-hidden"); }
+      else { dup[k].setAttribute("tabindex", "-1"); dup[k].setAttribute("aria-hidden", "true"); }
+    }
   }
   var sw = document.querySelector(".langsw");
   if (sw) {

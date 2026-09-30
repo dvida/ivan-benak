@@ -152,11 +152,11 @@ hr.orn::after { content: "❦ ❦ ❦"; }
 .m > .en { color: #33291f; }
 .m.title > div { padding-top: 10px; }
 
-h1, h2, h3 { font-weight: normal; line-height: 1.2; }
-h1 { font-size: 30px; margin: 6px 0 4px; color: var(--red); }
+h1, h2, h3, .h1-en { font-weight: normal; line-height: 1.2; }
+h1, .h1-en { font-size: 30px; margin: 6px 0 4px; color: var(--red); }
 h2 { font-size: 23px; margin: 10px 0 4px; color: var(--red); }
-h3 { font-size: 19px; margin: 8px 0 2px; }
-.en h1, .en h2, .en h3 { font-style: italic; }
+h3, h2.cat-h { font-size: 19px; margin: 8px 0 2px; color: var(--ink); }
+.en h1, .en h2, .en h3, .en .h1-en { font-style: italic; }
 p { margin: 0 0 .7em; }
 .kicker { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); margin: 0; }
 
@@ -355,11 +355,6 @@ html.show-both .foot .lbl span[lang="en"]::before, html.show-both .foot-bottom >
   .pager .up { grid-column: 1 / -1; order: 3; }
 }
 
-@media print {
-  body, html { background: #fff; }
-  .nav, .nav2, .nav-toggle, .langsw, .vez, .pager { display: none; }
-  .page { border: 0; box-shadow: none; }
-}
 
 /* homepage portrait, centred above both columns */
 .hero { text-align: center; margin: 4px 0 8px; }
@@ -816,3 +811,126 @@ table.index .sg td + td { font-style: italic; font-weight: normal; }
 table.index .sg .sg-top { float: right; font-style: normal; text-decoration: none; padding: 0 2px; }
 table.index tr.lost td { color: var(--ink-soft); }
 main.moved { max-width: 640px; margin: 40px auto; padding: 16px; }
+
+/* ---------- skip link, screen-reader-only text ---------- */
+.skip {
+  position: absolute; left: 8px; top: -60px; z-index: 80; padding: 6px 12px; font-size: 15px;
+  background: var(--paper); color: var(--link); border: 2px outset var(--bevel-hi);
+}
+.skip:focus { top: 8px; }
+main:focus { outline: none; }
+.sr-only {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- poem lists follow the language switch (one link per poem, see build.py index_row) ---------- */
+html.show-hr table.index tr:not(.sg) > td[lang="en"] { display: none; }
+html.show-en table.index tr:not(.sg) > td:first-child:not([colspan]) { display: none; }
+html.show-en table.index td + td { border-left: 0; }
+table.index .letter .sg-top { float: right; font-size: 13px; font-weight: normal; text-decoration: none; }
+html.show-hr .t-sep, html.show-hr .t-en, html.show-en .t-sep, html.show-en .t-hr { display: none; }
+.letters { position: relative; }
+
+/* ---------- home page: three inviting boxes ---------- */
+.discover { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0 6px; }
+.dbox {
+  position: relative; padding: 10px 12px 12px 62px; background: var(--paper-2);
+  border: 2px outset var(--bevel-hi); border-right-color: var(--bevel-lo); border-bottom-color: var(--bevel-lo);
+}
+.dbox svg { position: absolute; left: 12px; top: 12px; }
+.dbox-h { margin: 0 0 4px; font-size: 17px; line-height: 1.25; }
+.dbox-h a { font-weight: bold; color: var(--red); text-decoration: none; }
+.dbox-h a:hover { text-decoration: underline; }
+.dbox-h a::after { content: " \2192"; }
+.dbox-h i, .dbox-t i { display: block; font-size: 14px; color: var(--ink-soft); }
+.dbox-t { margin: 0; font-size: 14.5px; line-height: 1.4; }
+.dbox-t i { margin-top: 2px; }
+.dform { display: flex; gap: 4px; margin: 8px 0 0 -50px; }
+.dform input {
+  flex: 1; min-width: 0; font: inherit; font-size: 15px; padding: 3px 7px;
+  background: #fffdf6; color: var(--ink); border: 2px inset var(--bevel-lo);
+}
+.dform button {
+  font: inherit; font-size: 14px; padding: 2px 8px; cursor: pointer; color: var(--ink); background: var(--paper);
+  border: 2px outset var(--bevel-hi); border-right-color: var(--bevel-lo); border-bottom-color: var(--bevel-lo);
+}
+.dform button i { font-size: 12px; color: var(--ink-soft); }
+.dform button:active { border-style: inset; }
+html.show-hr .dbox i[lang="en"], html.show-hr .dform button i { display: none; }
+@media (max-width: 760px) {
+  .discover { grid-template-columns: 1fr; gap: 8px; }
+  .dform { margin-left: 0; }
+  .dform input { font-size: 16px; }
+}
+
+/* ---------- "Podijelite uspomenu · Share a memory" ---------- */
+.memory {
+  position: relative; margin: 22px 0 8px; padding: 6px 0 8px 52px;
+  background: #fffaf0; border: 2px inset var(--bevel-hi); border-top-color: var(--bevel-lo); border-left-color: var(--bevel-lo);
+}
+.memory > img { position: absolute; left: 12px; top: 14px; }
+.memory h2 { font-size: 20px; margin-top: 4px; }
+.memory p { font-size: 15.5px; }
+.memory .mem-go { margin: 6px 0 2px; }
+.memory .mem-go a { font-weight: bold; }
+.memory .mem-go a::before { content: "\2709\00A0"; font-weight: normal; }
+.memory .mem-addr { font-size: 13.5px; color: var(--ink-soft); }
+@media (max-width: 760px) { .vids { padding: 0 4px; } .memory { padding-left: 44px; } .memory > img { left: 6px; width: 28px; height: auto; } }
+
+/* ---------- songs: who recorded it, where it lives ---------- */
+.vids { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 4px 18px; padding: 0 18px; }
+.vids .yt { margin: 8px auto 4px; }
+.vcred { text-align: left; max-width: 480px; margin: 0 auto 8px; font-style: normal; }
+.vcred b { display: block; font-weight: normal; font-style: italic; color: var(--ink); }
+.vcred span { display: block; overflow-wrap: anywhere; }
+.song-rights { font-size: 13.5px; color: var(--ink-soft); font-style: italic; }
+
+/* ---------- gallery: captions wrap in full and follow the language switch ---------- */
+.gallery .cap { overflow-wrap: anywhere; hyphens: auto; }
+.gallery .cap > span { display: block; }
+html.show-hr .gallery .cap [lang="en"], html.show-en .gallery .cap .c-hr { display: none; }
+h1.cap, .h1-en.cap { font-size: 17px; line-height: 1.4; color: var(--ink-soft); margin: 6px 0 4px; }
+
+/* ---------- 404 ---------- */
+.qotd.lost { margin-top: 10px; }
+.lost-go { text-align: center; margin-top: 12px; }
+
+/* ---------- print: the poem on white paper, nothing else ---------- */
+@media print {
+  @page { margin: 16mm 14mm; }
+  html, body { background: #fff !important; color: #000; }
+  body { padding: 0; font: 11.5pt/1.45 Georgia, "Times New Roman", Times, serif; }
+  .page { border: 0; box-shadow: none; max-width: none; background: #fff; }
+  .skip, .topbar, .langsw, .nav, .nav2, .nav-toggle, .vez, .pager, .lang-bar, .masthead,
+  .foot-cols, .foot-bottom, .discover, .memory, .qnav, .wcal, .pform, .pmapwrap, .plegend, .yt-wrap,
+  .w95, .kitty, .heart-drop, #tm2003, .bday-banner, .sg-top, noscript { display: none !important; }
+  main { padding: 0; }
+  .foot { border: 0; background: none; margin-top: 10mm; padding: 0; font-size: 9pt; color: #444; }
+  .foot-mem { font-size: 9pt; color: #444; text-align: left; padding: 0; border-top: 1px solid #999; padding-top: 2mm; }
+  .foot-mem img { display: none; }
+  .foot p.foot-mem small { display: inline; margin: 0; font-size: 9pt; }
+  .foot p.foot-mem > span[lang="en"], .foot p.foot-mem small > span[lang="en"] { display: inline; }
+  html.show-hr .foot p.foot-mem span[lang="en"] { display: none; }
+  .foot p.foot-mem span[lang="en"]::before { content: " · "; font-style: normal; }
+  .foot p.foot-mem small::before { content: " — "; }
+  html.show-en .foot p.foot-mem span[lang="en"]::before { content: none; }
+  a, a:visited, h1, h2, h3, .h1-en, .m > .en, .kicker, .poem-meta, .cap, .signature, .note, .qotd .kicker { color: #000 !important; }
+  a { text-decoration: none; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 8.5pt; color: #444; word-break: break-all; }
+  .qotd, .picks, .note, details.variant, .qotd.bday { border: 1px solid #999 !important; background: #fff !important; box-shadow: none !important; }
+  .poem .m.stanza:hover > div, .poem .m.stanza.lit > div, table.index tr:hover td, .calday.today > div { background: none !important; }
+  .m > .en { border-left-color: #999; }
+  .m.stanza, .stanza p, .qotd, .calday, figure, table.index tr, .presult, details.variant > summary { break-inside: avoid; page-break-inside: avoid; }
+  h1, h2, h3, .h1-en { break-after: avoid; page-break-after: avoid; }
+  .portrait, .ill { float: none; text-align: center; }
+  .portrait img, .hero .portrait img { max-height: 70mm; }
+  details.variant > summary { list-style: none; }
+  /* both languages side by side while there is room (A4 portrait fits two ~85 mm columns); one language: one column */
+  html.show-both .m { grid-template-columns: 1fr 1fr; }
+  html.show-both .m > .en { border-left: 1px solid #999; border-top: 0; color: #000; }
+}
+@media print and (max-width: 140mm) {      /* narrow paper: stacked */
+  html.show-both .m { grid-template-columns: 1fr; }
+  html.show-both .m > .en { border-left: 0; border-top: 1px dotted #999; }
+}

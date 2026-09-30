@@ -1,5 +1,5 @@
 /* "Pronađi pjesmu / Find a poem": a small bilingual search over hand-made tags, plus a map of meaning.
-   Data: window.BENAK_FINDER (built by tools/finder.py). The normaliser/stemmer mirrors the Python one. */
+   Data: window.BENAK_FINDER (built and packed by tools/finder.py, unpacked below). The normaliser/stemmer mirrors the Python one. */
 (function () {
   "use strict";
   var F = window.BENAK_FINDER;
@@ -41,8 +41,9 @@
     return w;
   }
   function rawTokens(s) { return (fold(s).match(/[a-z]+/g) || []).map(function (t) { return [t, stem(t)]; }); }
-  function tokens(s) {
-    return rawTokens(s).filter(function (t) { return !STOP[t[0]] && t[0].length > 1; }).map(function (t) { return t[1]; });
+  function tokens(s, stop) {
+    stop = stop || STOP;
+    return rawTokens(s).filter(function (t) { return !stop[t[0]] && t[0].length > 1; }).map(function (t) { return t[1]; });
   }
   // a = query stem, b = stem in the index. Same stem; or the query is a prefix of b (only from 5 letters on);
   // or b is a prefix of the query, i.e. an inflection the stemmer missed (b from 4 letters in the lexicon,
@@ -56,6 +57,58 @@
     return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; });
   }
 
+  function set(list) { var o = {}; list.forEach(function (w) { o[w] = 1; }); return o; }
+  function slug(s) {          // tools/assemble.py slugify()
+    s = s.replace(/đ/g, "d").replace(/Đ/g, "D").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    return s.slice(0, 70).replace(/-+$/, "") || "pjesma";
+  }
+  // tools/finder.py pack() ships the data compactly; rebuild the poems, word weights and lexicon the search reads
+  function unpack() {
+    F.lex.forEach(function (e) {
+      e.w = e.w ? e.w.split(" ") : []; e.x = e.x ? e.x.split(" ") : []; e.p = e.p ? e.p.split("|") : [];
+    });
+    function lines(s) { return s ? s.split("\n") : []; }
+    F.items = F.items.map(function (r) {
+      var m = {};
+      for (var j = 0; j < r[9].length; j += 2) m[F.lex[r[9][j]].id] = r[9][j + 1];
+      return {
+        s: r[0] || slug(r[2]), c: F.cats[r[1]], th: r[2], te: r[3], sh: r[4], se: r[5], l1: lines(r[6]), l2: lines(r[7]),
+        a: F.aud[r[8]], m: m, t: r[10].map(function (j) { return F.lex[j].id; }), p: [r[11] / 1e4, r[12] / 1e4], r: r[13],
+        su: r[14]
+      };
+    });
+  }
+  // the word index is only needed by the search: built on the first search, not when the page opens
+  function unpackIndex() {
+    var val = {}, fin = F.fin, nc = F.abc.length - fin, sh = set(F.sthr), se = set(F.sten), i;
+    for (i = 0; i < F.abc.length; i++) val[F.abc.charAt(i)] = i;
+    F.items.forEach(function (it) {
+      it.k = []; it.ti = []; it.x = [];
+      it.su = it.su != null ? it.su.split(" ") : Object.keys(set(tokens(it.sh, sh).concat(tokens(it.se, se)))).sort();
+    });
+    // per idf group, each word followed by its postings (poem index gap * 7 + field mask - 1, base-n digits)
+    F.idf = {};
+    F.ix.forEach(function (g) {
+      var s = g[1], n = s.length, i = 0, w, prev, c, q, v, it;
+      while (i < n) {
+        for (c = i; i < n && s.charCodeAt(i) >= 97 && s.charCodeAt(i) <= 122; i++);
+        w = s.slice(c, i); F.idf[w] = g[0] / 100; prev = -1;
+        while (i < n && !(s.charCodeAt(i) >= 97 && s.charCodeAt(i) <= 122)) {
+          for (q = 0; (v = val[s.charAt(i)]) >= fin; i++) q = q * nc + v - fin + 1;
+          v = q * fin + v; i++;
+          prev += Math.floor(v / 7) + 1; v = v % 7 + 1; it = F.items[prev];
+          if (v & 1) it.k.push(w);
+          if (v & 2) it.ti.push(w);
+          if (v & 4) it.x.push(w);
+        }
+      }
+    });
+    F.items.forEach(function (it) { it.k.sort(); it.ti.sort(); });
+    F.ix = null;
+  }
+  if (F.fmt === 2) unpack();
+
   var kidsSet = {};
   F.kids.forEach(function (w) { kidsSet[w] = 1; });
   F.items.forEach(function (it) {
@@ -65,6 +118,7 @@
   });
 
   function search(q) {
+    if (F.ix) unpackIndex();
     var raw = rawTokens(q), rs = raw.map(function (t) { return t[1]; });
     var hitTags = {}, used = [], kids = false;
     // 1. phrases, longest first, as whole phrases

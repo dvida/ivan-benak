@@ -7,7 +7,26 @@
   "use strict";
   var me = document.currentScript;
   var ROOT = me ? me.src.replace(/assets\/js\/eggs\.js.*$/, "") : "";
-  var E = window.BENAK_EGGS || { ads: [], love: [], mace: null };
+  var DATA = (me && me.getAttribute("data-eggs")) || ROOT + "assets/js/eggs-data.js";
+
+  /* the eggs' texts (radio ads, love poems, the kitten's verse) are only fetched the first time an egg hatches */
+  var E = null, waiting = [];
+  function withData(fn) {
+    if (E) { fn(); return; }
+    waiting.push(fn);
+    if (waiting.length > 1) return;          // already on its way
+    var done = function () {
+      E = window.BENAK_EGGS || { ads: [], love: [], mace: null };
+      var w = waiting; waiting = [];
+      for (var i = 0; i < w.length; i++) w[i]();
+    };
+    var s = document.createElement("script");
+    s.src = DATA;
+    s.onload = done;
+    s.onerror = done;                          // offline: the eggs still hatch, just without their verses
+    document.head.appendChild(s);
+  }
+  function preload() { withData(function () {}); }
   var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function esc(s) {
@@ -159,6 +178,7 @@
     '<g stroke="#2b2118" stroke-width=".9"><line x1="80" y1="40" x2="66" y2="37"/><line x1="80" y1="42" x2="66" y2="44"/><line x1="100" y1="40" x2="114" y2="37"/><line x1="100" y1="42" x2="114" y2="44"/></g></svg>';
   function kitten(focusIt) {     // focusIt: only when summoned from the keyboard, never from the search box
     if (document.querySelector(".kitty")) return;
+    preload();
     var k = document.createElement("div");
     k.className = "kitty walking" + (calm ? " calm" : "");
     k.innerHTML = CAT;
@@ -181,6 +201,10 @@
       if (gone) return;
       k.classList.remove("walking");
       purr(3.2);
+      withData(function () { say(); setTimeout(dk.close, 7000); });
+    }, calm ? 50 : 4000);
+    function say() {
+      if (gone) return;
       if (E.mace) {
         var b = document.createElement("div");
         b.className = "kitty-say";
@@ -190,26 +214,28 @@
         k.appendChild(b);
         if (focusIt) b.focus({ preventScroll: true });
       }
-      setTimeout(dk.close, 7000);
-    }, calm ? 50 : 4000);
+    }
   }
 
   /* ---------- 3. the phone ---------- */
   function phone(el) {
     if (document.querySelector(".w95.phone-win")) return;
+    preload();
     ring(2);
     el.classList.add("ringing");
     setTimeout(function () { el.classList.remove("ringing"); }, 3400);
-    setTimeout(function () {
+    setTimeout(function () { withData(function () {
+      if (document.querySelector(".w95.phone-win")) return;
       var ad = pickOne(E.ads.length ? E.ads : [{ s: "podaci-o-pjesniku", th: "", te: "", hr: [], en: [] }]);
       win("Radio burza · 031/652-821",
         '<p class="phone-hello">&#9742; Halo, Ivo ovdje! <i lang="en">Hello, Ivo speaking!</i></p>' +
         '<p class="w95-small">Imam nešto za vas… · <i lang="en">I have something for you…</i></p>' + excerpt(ad), "phone-win");
-    }, 2300);
+    }); }, 2300);
   }
 
   /* ---------- 4. hearts ---------- */
   function hearts() {
+    preload();
     if (!calm) {
       for (var i = 0; i < 28; i++) {
         var h = document.createElement("img");
@@ -225,10 +251,10 @@
         (function (x) { setTimeout(function () { x.remove(); }, 8000); })(h);
       }
     }
-    setTimeout(function () {
+    setTimeout(function () { withData(function () {
       if (!E.love.length || document.querySelector(".w95.love-win")) return;
       win("Ljubavna pjesma · A love poem", excerpt(pickOne(E.love)), "love-win");
-    }, calm ? 0 : 1600);
+    }); }, calm ? 0 : 1600);
   }
 
   window.BENAK_KITTEN = kitten;       // also used by the Find-a-poem search (finder.js)
