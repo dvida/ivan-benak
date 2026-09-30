@@ -104,8 +104,10 @@
       box.querySelector(".en .src").innerHTML = "— from <a href=\"" + href + "\">" + esc(q.title_en) + "</a>" +
         (q.sig_en ? '<span class="qsig">' + esc(q.sig_en) + "</span>" : "");
       var lab = document.getElementById("qday");
-      if (lab) lab.textContent = "· " + date.getDate() + ". " + MHR[date.getMonth()] + " · " + MEN[date.getMonth()] + " " + date.getDate() +
-        (q.occ_hr ? " · " + q.occ_hr + (q.occ_en && q.occ_en !== q.occ_hr ? " / " + q.occ_en : "") : "");
+      if (lab) lab.innerHTML = '<span class="qd-date">' + date.getDate() + ". " + MHR[date.getMonth()] +
+        ' <span class="qd-sep">·</span> <i lang="en">' + MEN[date.getMonth()] + " " + date.getDate() + "</i></span>" +
+        (q.occ_hr ? '<span class="qd-occ">' + esc(q.occ_hr) +
+          (q.occ_en && q.occ_en !== q.occ_hr ? ' <span class="qd-sep">·</span> <i lang="en">' + esc(q.occ_en) + "</i>" : "") + "</span>" : "");
       var all = document.getElementById("qall");
       if (all) all.setAttribute("href", root + "misao-dana.html#d-" + key);
       var lit = document.querySelectorAll(".calday.today");

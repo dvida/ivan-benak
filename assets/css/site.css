@@ -333,7 +333,12 @@ table.index .letter td { border-bottom: 1px solid var(--rule); font-style: norma
 .ill img { max-width: min(100%, 420px); height: auto; mix-blend-mode: multiply; }
 
 /* quote of the day: date label, links, calendar */
-.qotd .qday { text-transform: none; letter-spacing: 0; font-style: italic; color: var(--ink-soft); }
+.qotd .qday { text-align: center; margin: 2px 0 6px; line-height: 1.35; }
+.qotd .qd-date { display: block; font-size: 18px; color: var(--ink); }
+.qotd .qd-date i { color: var(--ink-soft); }
+.qotd .qd-occ { display: block; font-size: 15px; font-style: italic; color: var(--red); margin-top: 1px; }
+.qotd .qd-occ i { color: #b3585b; }
+.qotd .qd-sep { color: var(--rule); font-style: normal; }
 .qnav { text-align: center; font-size: 14px; margin: 8px 0 2px; }
 .qnav button {
   font: inherit; font-size: 14px; padding: 2px 10px; margin: 0 3px;
