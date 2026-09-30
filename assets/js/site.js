@@ -267,4 +267,38 @@
   }
   openFromHash();
   window.addEventListener("hashchange", openFromHash);
+  /* ---- "Izabrane pjesme": the turning frame of selected poems (pjesme/index.html) ---- */
+  var topc = document.querySelector(".topc");
+  if (topc) {
+    var slides = topc.querySelectorAll(".topc-slide"), chips = topc.querySelectorAll(".topc-chip");
+    var mini = topc.classList.contains("mini");
+    var kEl = topc.querySelector(".topc-k"), cur = 0;
+    topc.classList.add("on");
+    var show = function (i, focus) {
+      cur = (i + slides.length) % slides.length;
+      for (var j = 0; j < slides.length; j++) {
+        slides[j].hidden = j !== cur;
+        if (!chips[j]) continue;
+        chips[j].classList.toggle("cur", j === cur);
+        if (j === cur) chips[j].setAttribute("aria-current", "true"); else chips[j].removeAttribute("aria-current");
+      }
+      if (kEl) kEl.textContent = cur + 1;
+      var strip = topc.querySelector(".topc-strip"), c = chips[cur];
+      if (strip && c) strip.scrollTo({ left: c.offsetLeft - strip.clientWidth / 2 + c.clientWidth / 2, behavior: "smooth" });
+      if (focus && chips[cur]) chips[cur].focus();
+    };
+    topc.querySelector(".topc-prev").addEventListener("click", function () { show(cur - 1); });
+    topc.querySelector(".topc-next").addEventListener("click", function () { show(cur + 1); });
+    for (var ci = 0; ci < chips.length; ci++) {
+      chips[ci].addEventListener("click", function (e) { e.preventDefault(); show(+this.getAttribute("data-i")); });
+    }
+    topc.addEventListener("keydown", function (e) {
+      if (e.target.closest && e.target.closest(".topc-strip, .topc-frame")) {
+        if (e.key === "ArrowRight") { e.preventDefault(); show(cur + 1, e.target.classList.contains("topc-chip")); }
+        if (e.key === "ArrowLeft") { e.preventDefault(); show(cur - 1, e.target.classList.contains("topc-chip")); }
+      }
+    });
+    var m = /^#izbor-(\d+)$/.exec(location.hash);    // a link to one poem opens it; otherwise start at a random one
+    show(m ? +m[1] - 1 : Math.floor(Math.random() * slides.length));
+  }
 })();
