@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dvida.github.io/ivan-benak/sitemap.xml
+Sitemap: https://ivanbenak.eu/sitemap.xml
