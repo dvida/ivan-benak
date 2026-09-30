@@ -637,10 +637,22 @@ body.tm-on { overflow: hidden; }
   position: fixed; inset: 0; z-index: 70; overflow: auto; background: #99CCFF; color: #000;
   font-family: Arial, Helvetica, sans-serif; text-align: center; padding: 22px 12px 40px;
 }
-#tm2003 .tm-back {
-  position: fixed; right: 12px; bottom: 12px; font: 13px Tahoma, Verdana, sans-serif; padding: 4px 10px;
-  background: #c0c0c0; border: 2px outset #fff; cursor: pointer; color: #000;
+#tm2003 { padding-top: 0; }
+#tm2003 .tm-banner {
+  position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 8px 18px; margin: 0 -12px 22px; padding: 10px 14px;
+  background: #fffbe0; border-bottom: 3px double #000080; box-shadow: 0 2px 6px rgba(0,0,0,.18);
+  font: 17px Georgia, serif; color: #1b1b3a;
 }
+#tm2003 .tm-banner p { margin: 0; font-weight: bold; }
+#tm2003 .tm-banner i { font-weight: normal; }
+#tm2003 .tm-back {
+  font: bold 16px Tahoma, Verdana, sans-serif; padding: 7px 16px; cursor: pointer; color: #fff;
+  background: #9b2226; border: 3px outset #d77a7c; border-radius: 2px;
+}
+#tm2003 .tm-back i { font-weight: normal; }
+#tm2003 .tm-back:hover { background: #b3292e; }
+#tm2003 .tm-back:active { border-style: inset; }
 .tm-marquee { overflow: hidden; width: min(422px, 90vw); margin: 0 auto 14px; white-space: nowrap; }
 .tm-marquee span {
   display: inline-block; font: 900 30px "Arial Black", Arial, sans-serif; color: #0000CC;
@@ -652,7 +664,6 @@ body.tm-on { overflow: hidden; }
 .tm-icons b { color: #3333FF; font-size: 15px; }
 .tm-icons img { border: 0; }
 #tm2003 hr { max-width: 760px; border: 0; border-top: 2px groove #fff; margin: 16px auto; }
-.tm-mail { color: #0000CC; text-decoration: underline; margin: 0 0 12px; }
 .tm-verse { font-size: 16px; line-height: 1.5; margin: 0 auto; }
 .tm-by { font-size: 11px; color: #333; margin-top: 18px; font-style: italic; }
 .tm-small { font-size: 11px; color: #334; }

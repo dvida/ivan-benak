@@ -80,21 +80,20 @@
     var icon = function (img, w, h, label, href) {
       return '<td><a href="' + ROOT + href + '"><img src="' + ROOT + "assets/img/orig/" + img + '" width="' + w + '" height="' + h + '" alt=""></a><br><b>' + label + "</b></td>";
     };
+    var yr = new Date().getFullYear();
     t.innerHTML =
-      '<button type="button" class="tm-back">&#8617; Natrag u ' + new Date().getFullYear() + '. · <i>Back to ' + new Date().getFullYear() + "</i></button>" +
+      '<div class="tm-banner"><p>&#8987; Ovako je stranica izgledala 2003. godine <i>· This is how it looked in 2003</i></p>' +
+      '<button type="button" class="tm-back">&#8617; Natrag u ' + yr + '. <i>· Back to ' + yr + "</i></button></div>" +
       '<div class="tm-marquee"><span>IVAN BENAK POETA</span></div>' +
       '<table class="tm-icons"><tr>' +
       icon("srce.gif", 63, 63, "poeta", "zivotopis.html") + icon("pero.gif", 64, 96, "izdavaštvo", "knjige.html") +
       icon("pjesme.gif", 55, 53, "pjesme", "pjesme/index.html") + icon("benak1.jpg", 100, 73, "home", "index.html") +
       "</tr></table><hr>" +
-      '<p class="tm-mail">ivan.benak@os.hinet.hr</p>' +
       '<p class="tm-verse">Ivan Benak mi je ime,<br>pjesnik koji piše rime,<br>ulica se pisat mora,<br>Pejačević slavna Dora,<br>' +
       "ako netko me potraži,<br>moje kuće broj pet važi,<br>još dodajte mjesto moje,<br>znajte slavno Valpovo je,<br>" +
       "a telefon stalno vrijedan:<br>nula trideset i jedan,<br>šesto pedeset i dva,<br>osamsto dvadeset jedan.</p>" +
       '<p class="tm-by">product by franCUZ</p><hr>' +
-      '<p class="tm-small">Najbolje pregledavati u Internet Exploreru 5.0 pri razlučivosti 800×600<br>' +
-      "Stranica je izgledala ovako 2003. godine, na adresi free-os.htnet.hr/benak · " +
-      "<i>This is how his site looked in 2003.</i></p>";
+      '<p class="tm-small">Najbolje pregledavati u Internet Exploreru 5.0 pri razlučivosti 800×600 · free-os.htnet.hr/benak</p>';
     document.body.appendChild(t);
     document.body.classList.add("tm-on");
     var close = function () { t.remove(); document.body.classList.remove("tm-on"); };
