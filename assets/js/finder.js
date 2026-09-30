@@ -56,6 +56,17 @@
   function esc(s) {
     return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; });
   }
+  // every UI string in both languages, each in its lang-marked element; site.css shows the one(s) the switch asks for
+  function bi(hr, en, sep) {
+    return '<span lang="hr">' + hr + '</span><span class="t-sep">' + (sep || " · ") + '</span><span lang="en">' + en + "</span>";
+  }
+  function mode() { return window.BENAK_LANG ? window.BENAK_LANG.mode() : "both"; }
+  function langAttr(el, a, hr, en, both) {    // an attribute with two versions: site.js (BENAK_LANG) keeps it in step
+    el.setAttribute(a, both || hr + " / " + en);
+    el.setAttribute("data-" + a + "-hr", hr);
+    el.setAttribute("data-" + a + "-en", en);
+    if (window.BENAK_LANG) window.BENAK_LANG.attrs(el);
+  }
 
   function set(list) { var o = {}; list.forEach(function (w) { o[w] = 1; }); return o; }
   function slug(s) {          // tools/assemble.py slugify()
@@ -216,7 +227,7 @@
       var xy = px(it.p), a = document.createElementNS(ns, "a");
       a.setAttribute("href", "pjesme/" + it.s + ".html");
       a.setAttribute("tabindex", "-1");     // keyboard: the region labels below lead to lists of these links
-      a.setAttribute("aria-label", it.th + " / " + it.te);
+      langAttr(a, "aria-label", it.th, it.te);
       var c = document.createElementNS(ns, "circle");
       c.setAttribute("cx", xy[0]); c.setAttribute("cy", xy[1]); c.setAttribute("r", radius(it.s));
       c.setAttribute("fill", (CAT[it.c] || ["#888"])[0]);
@@ -241,14 +252,18 @@
       b.setAttribute("tabindex", "0");
       b.setAttribute("aria-expanded", "false");
       b.setAttribute("aria-controls", "pregion");
-      b.setAttribute("aria-label", r.hr + " / " + r.en + ": " + pjesme(r.n) + " / " + r.n + " poems");
+      langAttr(b, "aria-label", r.hr + ": " + pjesme(r.n), r.en + ": " + r.n + " poems",
+        r.hr + " / " + r.en + ": " + pjesme(r.n) + " / " + r.n + " poems");
       b.setAttribute("data-r", ri);
       var t = document.createElementNS(ns, "text");
       t.setAttribute("x", xy[0]); t.setAttribute("y", xy[1]); t.setAttribute("class", "reg");
       t.setAttribute("text-anchor", "middle");
-      t.textContent = r.hr;
+      var t1 = document.createElementNS(ns, "tspan");       // the Croatian name, and the English under it
+      t1.setAttribute("lang", "hr"); t1.setAttribute("class", "reg-hr");
+      t1.textContent = r.hr;
+      t.appendChild(t1);
       var t2 = document.createElementNS(ns, "tspan");
-      t2.setAttribute("x", xy[0]); t2.setAttribute("dy", "1.15em"); t2.setAttribute("class", "reg-en");
+      t2.setAttribute("x", xy[0]); t2.setAttribute("dy", "1.15em"); t2.setAttribute("class", "reg-en"); t2.setAttribute("lang", "en");
       t2.textContent = r.en;
       t.appendChild(t2);
       b.appendChild(t);
@@ -282,7 +297,7 @@
     var leg = document.getElementById("plegend");
     if (leg) leg.innerHTML = Object.keys(CAT).map(function (k) {
       return '<label><input type="checkbox" checked data-cat="' + k + '"> <span class="sw" style="background:' + CAT[k][0] + '"></span>' +
-        esc(CAT[k][1]) + ' <i lang="en">' + esc(CAT[k][2]) + "</i></label>";
+        '<span lang="hr">' + esc(CAT[k][1]) + '</span> <i lang="en">' + esc(CAT[k][2]) + "</i></label>";
     }).join("");
     if (leg) leg.addEventListener("change", function (e) {
       var k = e.target.getAttribute("data-cat");
@@ -299,15 +314,18 @@
         layoutLabels();
       }, 200);
     });
+    document.addEventListener("benak-lang", layoutLabels);   // one name or two per label: measure again
   }
   var touchy = false, regLabels = null;
   // keep every region label inside the map and clear of the others, measured as drawn (the font grows on phones)
   function layoutLabels() {
     if (!regLabels) return;
     var bs = Array.prototype.slice.call(regLabels.childNodes), pos = F.regions.map(function (r) { return px([r.x, r.y]); });
+    var en2 = mode() === "both";     // the English name sits under the Croatian only when both are shown
     function place(i) {
       var t = bs[i].firstChild;
-      t.setAttribute("x", pos[i][0]); t.setAttribute("y", pos[i][1]); t.firstElementChild.setAttribute("x", pos[i][0]);
+      t.setAttribute("x", pos[i][0]); t.setAttribute("y", pos[i][1]);
+      t.lastChild.setAttribute("x", pos[i][0]); t.lastChild.setAttribute("dy", en2 ? "1.15em" : "0");
     }
     bs.forEach(function (b, i) { place(i); });
     for (var it = 0; it < 300; it++) {
@@ -331,9 +349,9 @@
   }
   function showTip(it, tap) {
     if (!tip) return;
-    tip.innerHTML = "<b>" + esc(it.th) + "</b><br><i>" + esc(it.te) + "</i>" +
-      (it.sh ? '<div class="tip-s">' + esc(it.sh) + '</div><div class="tip-s" lang="en">' + esc(it.se) + "</div>" : "") +
-      (tap ? '<a class="tip-go" href="pjesme/' + it.s + '.html">Otvori pjesmu · <span lang="en">Open the poem</span> »</a>' : "");
+    tip.innerHTML = '<b lang="hr">' + esc(it.th) + '</b><br class="t-sep"><i lang="en">' + esc(it.te) + "</i>" +
+      (it.sh ? '<div class="tip-s" lang="hr">' + esc(it.sh) + '</div><div class="tip-s" lang="en">' + esc(it.se) + "</div>" : "") +
+      (tap ? '<a class="tip-go" href="pjesme/' + it.s + '.html">' + bi("Otvori pjesmu", "Open the poem") + " »</a>" : "");
     tip.classList.toggle("tap", !!tap);
     var box = svg.getBoundingClientRect();
     var r = dots[it.s].getBoundingClientRect();
@@ -382,12 +400,13 @@
     var r = F.regions[ri];
     var its = F.items.filter(function (it) { return it.r === ri; })
       .sort(function (a, b) { return a.th.replace(Q, "").localeCompare(b.th.replace(Q, ""), "hr"); });
-    panel.innerHTML = '<p class="pregion-h"><b>' + esc(r.hr) + '</b> · <i lang="en">' + esc(r.en) + '</i> — ' +
-      pjesme(its.length) + ' · <span lang="en">' + its.length + ' poems</span> ' +
-      '<button type="button" class="pregion-x">Zatvori · <span lang="en">Close</span></button></p><ul>' +
-      its.map(function (it) {
-        return '<li><span class="sw" style="background:' + (CAT[it.c] || ["#888"])[0] + '"></span><a href="pjesme/' + it.s + '.html">' +
-          esc(it.th) + '</a> <i lang="en">' + esc(it.te) + "</i></li>";
+    panel.innerHTML = '<p class="pregion-h">' + bi("<b>" + esc(r.hr) + "</b>", "<i>" + esc(r.en) + "</i>") + " — " +
+      bi(pjesme(its.length), its.length + " poems") + " " +
+      '<button type="button" class="pregion-x">' + bi("Zatvori", "Close") + "</button></p><ul>" +
+      its.map(function (it) {      // both: the Croatian title is the link, the English beside it; English only: the English is the link
+        var h = 'href="pjesme/' + it.s + '.html"';
+        return '<li><span class="sw" style="background:' + (CAT[it.c] || ["#888"])[0] + '"></span><a ' + h + ' lang="hr">' +
+          esc(it.th) + '</a> <i lang="en" class="t-sep">' + esc(it.te) + '</i><a ' + h + ' lang="en" class="solo">' + esc(it.te) + "</a></li>";
       }).join("") + "</ul>";
     panel.hidden = false;
     if (!input || !input.value.trim()) highlight(its.map(function (it) { return { it: it }; }), 0);
@@ -448,9 +467,8 @@
   }
   function moreButton() {
     var left = list.length - shown, n = Math.min(PAGE, left);
-    return left > 0 ? '<p class="pmore-p"><button type="button" class="pmore">Prikaži još ' + n +
-      ' · <span lang="en">Show ' + n + " more</span></button> <span class=\"pleft\">(još " + left + " · <span lang=\"en\">" +
-      left + " left</span>)</span></p>" : "";
+    return left > 0 ? '<p class="pmore-p"><button type="button" class="pmore">' + bi("Prikaži još " + n, "Show " + n + " more") +
+      '</button> <span class="pleft">(' + bi("još " + left, left + " left") + ")</span></p>" : "";
   }
   function showMore() {
     var old = out.querySelector(".pmore-p");
@@ -473,15 +491,15 @@
     if (!q.trim()) { out.innerHTML = ""; status.textContent = ""; return; }
     if (!list.length) {
       status.textContent = "";
-      out.innerHTML = '<p class="pending">Nisam pronašao pjesmu za te riječi; pokušajte drugim riječima ili odaberite nešto ispod. · ' +
-        '<span lang="en">No poem found for those words; try other words or pick one below.</span></p>';
+      out.innerHTML = '<p class="pending">' + bi("Nisam pronašao pjesmu za te riječi; pokušajte drugim riječima ili odaberite nešto ispod.",
+        "No poem found for those words; try other words or pick one below.") + "</p>";
       return;
     }
-    status.innerHTML = esc(plural(list.length)) + ' · <span lang="en">' + list.length + (list.length === 1 ? " poem" : " poems") +
-      " found</span>";
-    var head = r.tags.length ? '<p class="found">Tražim: ' + r.tags.map(function (t) {
-      return '<span class="chip-s">' + esc(t.hr) + " · " + esc(t.en) + "</span>";
-    }).join(" ") + "</p>" : "";
+    status.innerHTML = bi(esc(plural(list.length)), list.length + (list.length === 1 ? " poem" : " poems") + " found");
+    var head = r.tags.length ? '<p class="found"><span lang="hr">Tražim:</span><span lang="en" class="solo">Looking for:</span> ' +
+      r.tags.map(function (t) {
+        return '<span class="chip-s">' + bi(esc(t.hr), esc(t.en)) + "</span>";
+      }).join(" ") + "</p>" : "";
     out.innerHTML = head + list.slice(0, shown).map(card).join("") + moreButton();
   }
   if (out) out.addEventListener("click", function (e) {
@@ -495,8 +513,8 @@
   var chips = document.getElementById("pchips");
   if (chips) {
     chips.innerHTML = F.chips.map(function (c) {
-      return '<button type="button" data-q="' + esc(c.q) + '">' + esc(c.hr) + ' <i lang="en">' + esc(c.en) + "</i></button>";
-    }).join(" ") + ' <button type="button" id="prandom">Iznenadi me <i lang="en">Surprise me</i></button>';
+      return '<button type="button" data-q="' + esc(c.q) + '"><span lang="hr">' + esc(c.hr) + '</span> <i lang="en">' + esc(c.en) + "</i></button>";
+    }).join(" ") + ' <button type="button" id="prandom"><span lang="hr">Iznenadi me</span> <i lang="en">Surprise me</i></button>';
     chips.addEventListener("click", function (e) {
       var b = e.target.closest("button");
       if (!b) return;

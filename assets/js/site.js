@@ -14,11 +14,39 @@
     nt.setAttribute("aria-expanded", open ? "true" : "false");
   });
 
-  /* ---- site-wide language switch: HR / HR+EN / EN (remembered per browser) ---- */
+  /* ---- site-wide language switch: HR / HR+EN / EN (remembered per browser) ----
+     Text follows the mode through CSS (every UI string sits in a lang="hr" / lang="en" element, see build.py);
+     attributes cannot, so an element whose aria-label, title, placeholder, alt or aria-roledescription has two
+     versions carries data-<attr>-hr and data-<attr>-en, and langAttrs() puts the right one in place. The both-mode
+     value is the attribute as built, kept in data-<attr>-both the first time. Scripts that build such elements
+     later (calendar, search, easter eggs) call window.BENAK_LANG.attrs(el) on them. */
+  var ATTRS = ["aria-label", "title", "placeholder", "alt", "aria-roledescription"];
+  var curMode = "both";
+  function langAttrs(root, mode) {
+    mode = mode || curMode;
+    root = root || document;
+    var sel = ATTRS.map(function (a) { return "[data-" + a + "-hr]"; }).join(",");
+    var els = root.querySelectorAll ? Array.prototype.slice.call(root.querySelectorAll(sel)) : [];
+    if (root.matches && root.matches(sel)) els.push(root);
+    for (var i = 0; i < els.length; i++) {
+      for (var j = 0; j < ATTRS.length; j++) {
+        var a = ATTRS[j], el = els[i];
+        if (!el.hasAttribute("data-" + a + "-hr")) continue;
+        if (!el.hasAttribute("data-" + a + "-both")) el.setAttribute("data-" + a + "-both", el.getAttribute(a) || el.getAttribute("data-" + a + "-hr"));
+        el.setAttribute(a, el.getAttribute("data-" + a + "-" + mode));
+      }
+    }
+  }
   function setLang(mode) {       // the <head> script already set html.show-* before first paint
     var de = document.documentElement;
+    curMode = mode;
     de.classList.remove("show-hr", "show-en", "show-both");
     de.classList.add("js", "show-" + mode);
+    // the tab title: one language in a single-language mode (built into <html data-title-hr/-en>)
+    if (!de.hasAttribute("data-title-both")) de.setAttribute("data-title-both", document.title);
+    var tt = de.getAttribute("data-title-" + mode);
+    if (tt) document.title = tt;
+    langAttrs(document, mode);
     var btns = document.querySelectorAll(".langsw button");
     for (var i = 0; i < btns.length; i++) {
       btns[i].setAttribute("aria-pressed", btns[i].getAttribute("data-lang") === mode ? "true" : "false");
@@ -36,7 +64,11 @@
       if (en) { dup[k].removeAttribute("tabindex"); dup[k].removeAttribute("aria-hidden"); }
       else { dup[k].setAttribute("tabindex", "-1"); dup[k].setAttribute("aria-hidden", "true"); }
     }
+    var ev;
+    try { ev = new CustomEvent("benak-lang", { detail: mode }); } catch (e) { ev = null; }
+    if (ev) document.dispatchEvent(ev);      // finder.js lays out its map labels again
   }
+  window.BENAK_LANG = { mode: function () { return curMode; }, attrs: function (el) { langAttrs(el); } };
   var sw = document.querySelector(".langsw");
   if (sw) {
     sw.addEventListener("click", function (e) {
@@ -107,8 +139,9 @@
         var age = date.getFullYear() - 1933;
         ban.hidden = !bday;
         ban.innerHTML = '<span class="bunting" aria-hidden="true"></span>' +
-          '<p class="bday-title">Sretan rođendan, Ivo! <i lang="en">Happy birthday, Ivo!</i></p>' +
-          '<p class="bday-sub">Danas bi navršio ' + age + " " + godina(age) + ' · <span lang="en">Today he would have turned ' + age + "</span></p>";
+          '<p class="bday-title"><span lang="hr">Sretan rođendan, Ivo!</span> <i lang="en">Happy birthday, Ivo!</i></p>' +
+          '<p class="bday-sub"><span lang="hr">Danas bi navršio ' + age + " " + godina(age) + '</span><span class="t-sep"> · </span>' +
+          '<span lang="en">Today he would have turned ' + age + "</span></p>";
       }
       box.querySelector(".hr blockquote").innerHTML = q.hr.map(esc).join("<br>");
       box.querySelector(".en blockquote").innerHTML = q.en.map(esc).join("<br>");
@@ -119,10 +152,12 @@
         (q.sig_en ? '<span class="qsig">' + esc(q.sig_en) + "</span>" : "") +
         (q.note_en ? '<span class="qnote">' + esc(q.note_en) + (q.note_url ? ' <a href="' + esc(q.note_url) + '">Map of the grave &rarr;</a>' : "") + "</span>" : "");
       var lab = document.getElementById("qday");
-      if (lab) lab.innerHTML = '<span class="qd-date">' + date.getDate() + ". " + MHR[date.getMonth()] +
-        ' <span class="qd-sep">·</span> <i lang="en">' + MEN[date.getMonth()] + " " + date.getDate() + "</i></span>" +
-        (q.occ_hr ? '<span class="qd-occ">' + esc(q.occ_hr) +
-          (q.occ_en && q.occ_en !== q.occ_hr ? ' <span class="qd-sep">·</span> <i lang="en">' + esc(q.occ_en) + "</i>" : "") + "</span>" : "");
+      var SEP = '<span class="t-sep qd-sep"> · </span>';
+      if (lab) lab.innerHTML = '<span class="qd-date"><span lang="hr">' + date.getDate() + ". " + MHR[date.getMonth()] + "</span>" +
+        SEP + '<i lang="en">' + MEN[date.getMonth()] + " " + date.getDate() + "</i></span>" +
+        (q.occ_hr ? '<span class="qd-occ"><span lang="hr">' + esc(q.occ_hr) + "</span>" +
+          (q.occ_en && q.occ_en !== q.occ_hr ? SEP + '<i lang="en">' + esc(q.occ_en) + "</i>"
+            : '<span lang="en" class="solo">' + esc(q.occ_en || q.occ_hr) + "</span>") + "</span>" : "");
       var all = document.getElementById("qall");
       if (all) all.setAttribute("href", root + "misao-dana.html#d-" + key);
       var lit = document.querySelectorAll(".calday.today");
@@ -156,16 +191,21 @@
         var cls = "wcal-day" + (occ ? " occ" : "") + (written ? " pen" : "") + (isNow ? " now" : "") + (isSel ? " sel" : "") +
           ((lead + dd - 1) % 7 === 6 ? " sun" : "");
         var tip = q.occ_hr ? q.occ_hr + (q.occ_en ? " · " + q.occ_en : "") : (q.title_hr || "");
+        var tipHr = q.occ_hr || q.title_hr || "", tipEn = q.occ_en || q.title_en || tipHr;
         var wd = new Date(view.y, view.m, dd).getDay();
+        var labHr = DHR[wd] + ", " + dd + ". " + MHR[view.m] + " " + view.y + "." + (isNow ? ", danas" : "") + (q.occ_hr ? " – " + q.occ_hr : "");
+        var labEn = DEN[wd] + ", " + MEN[view.m] + " " + dd + ", " + view.y + (isNow ? ", today" : "") + (q.occ_hr ? " – " + (q.occ_en || q.occ_hr) : "");
         var label = DHR[wd] + ", " + dd + ". " + MHR[view.m] + " " + view.y + ". · " + DEN[wd] + ", " + MEN[view.m] + " " + dd + ", " + view.y +
           (isNow ? " · danas · today" : "") +
           (q.occ_hr ? " – " + q.occ_hr + (q.occ_en && q.occ_en !== q.occ_hr ? " · " + q.occ_en : "") : "");
         html += '<button type="button" class="' + cls + '" data-d="' + dd + '" title="' + esc(tip) + '" aria-label="' + esc(label) + '"' +
+          ' data-title-hr="' + esc(tipHr) + '" data-title-en="' + esc(tipEn) + '" data-aria-label-hr="' + esc(labHr) + '" data-aria-label-en="' + esc(labEn) + '"' +
           ' aria-pressed="' + (isSel ? "true" : "false") + '"' + (isNow ? ' aria-current="date"' : "") +
           ' tabindex="' + (dd === f ? "0" : "-1") + '">' + dd +
           (q.special === "birthday" ? '<i class="cake" aria-hidden="true">&#9829;</i>' : occ ? '<i class="mark"></i>' : written ? '<i class="pen" aria-hidden="true">&#10002;</i>' : "") + "</button>";
       }
       grid.innerHTML = html;
+      langAttrs(grid);
       document.getElementById("wcal-mhr").textContent = MHRN[view.m];
       document.getElementById("wcal-men").textContent = MEN[view.m];
       document.getElementById("wcal-year").textContent = view.y;
@@ -249,7 +289,8 @@
     wrap.className = "yt yt-player";
     var f = document.createElement("iframe");
     f.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(id) + "?autoplay=1";
-    f.title = (b.getAttribute("data-title") || "YouTube") + " (YouTube)";
+    var vt = curMode === "both" ? b.getAttribute("data-title") : b.getAttribute("data-vt-" + curMode);
+    f.title = (vt || b.getAttribute("data-title") || "YouTube") + " (YouTube)";
     f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
     f.allowFullscreen = true;
     wrap.appendChild(f);

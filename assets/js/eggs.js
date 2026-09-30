@@ -33,6 +33,16 @@
     return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; });
   }
   function pickOne(a) { return a[Math.floor(Math.random() * a.length)]; }
+  // both languages, each in its lang-marked element: site.css shows what the language switch asks for
+  function bi(hr, en, sep) {
+    return '<span lang="hr">' + hr + '</span><span class="t-sep">' + (sep || " · ") + '</span><span lang="en">' + en + "</span>";
+  }
+  function langAttr(el, a, hr, en, both) {   // an attribute in two versions, kept in step with the switch by site.js
+    el.setAttribute(a, both || hr + " · " + en);
+    el.setAttribute("data-" + a + "-hr", hr);
+    el.setAttribute("data-" + a + "-en", en);
+    if (window.BENAK_LANG) window.BENAK_LANG.attrs(el);
+  }
 
   /* ---------- sound (Web Audio, made on the spot: no files) ---------- */
   var ac = null;
@@ -89,10 +99,10 @@
 
   /* ---------- dialogs: focus moves in, Esc closes the newest one, focus goes back where it was ---------- */
   var stack = [];
-  function openDialog(el, label, onClose, noFocus) {
+  function openDialog(el, label, onClose, noFocus) {     // label: [hr, en]
     var back = document.activeElement;
     el.setAttribute("role", "dialog");
-    el.setAttribute("aria-label", label);
+    langAttr(el, "aria-label", label[0], label[1], label[2]);
     el.tabIndex = -1;
     var d = { el: el, close: null };
     d.close = function () {
@@ -112,11 +122,12 @@
   });
 
   /* ---------- a little Windows-95-ish window ---------- */
-  function win(title, html, cls) {
+  function win(title, html, cls, bar) {    // title: [hr, en, both-mode]; bar: the title bar's HTML (default: both, with " · ")
     var w = document.createElement("div");
     w.className = "w95 " + (cls || "");
-    w.innerHTML = '<div class="w95-bar"><span>' + esc(title) + '</span><button type="button" aria-label="Zatvori / Close">&#10005;</button></div>' +
+    w.innerHTML = '<div class="w95-bar"><span>' + (bar || bi(esc(title[0]), esc(title[1]))) + '</span><button type="button">&#10005;</button></div>' +
       '<div class="w95-body">' + html + "</div>";
+    langAttr(w.querySelector(".w95-bar button"), "aria-label", "Zatvori", "Close");
     document.body.appendChild(w);
     var d = openDialog(w, title);
     w.querySelector(".w95-bar button").addEventListener("click", d.close);
@@ -125,7 +136,7 @@
   function excerpt(x) {
     return '<div class="w95-cols"><div lang="hr"><b>' + esc(x.th) + "</b><p>" + x.hr.map(esc).join("<br>") + "</p></div>" +
       '<div lang="en"><b>' + esc(x.te) + "</b><p>" + x.en.map(esc).join("<br>") + "</p></div></div>" +
-      '<p class="w95-link"><a href="' + ROOT + "pjesme/" + x.s + '.html">Pročitaj cijelu pjesmu · <i>Read the whole poem</i> &rarr;</a></p>';
+      '<p class="w95-link"><a href="' + ROOT + "pjesme/" + x.s + '.html">' + bi("Pročitaj cijelu pjesmu", "<i>Read the whole poem</i>") + " &rarr;</a></p>";
   }
 
   /* ---------- 1. time machine to 2003 ---------- */
@@ -137,9 +148,12 @@
       return '<td><a href="' + ROOT + href + '"><img src="' + ROOT + "assets/img/orig/" + img + '" width="' + w + '" height="' + h + '" alt=""></a><br><b>' + label + "</b></td>";
     };
     var yr = new Date().getFullYear();
+    // the banner and its button follow the language switch; the page under them is a replica of his Croatian
+    // homepage of 2003 and stays as it was (.keep-lang: shown in every mode)
     t.innerHTML =
-      '<div class="tm-banner"><p>&#8987; Ovako je stranica izgledala 2003. godine <i>· This is how it looked in 2003</i></p>' +
-      '<button type="button" class="tm-back">&#8617; Natrag u ' + yr + '. <i>· Back to ' + yr + "</i></button></div>" +
+      '<div class="tm-banner"><p>&#8987; ' + bi("Ovako je stranica izgledala 2003. godine", "<i>This is how it looked in 2003</i>") + "</p>" +
+      '<button type="button" class="tm-back">&#8617; ' + bi("Natrag u " + yr + ".", "<i>Back to " + yr + "</i>") + "</button></div>" +
+      '<div class="tm-page keep-lang" lang="hr">' +
       '<div class="tm-marquee"><span>IVAN BENAK POETA</span></div>' +
       '<table class="tm-icons"><tr>' +
       icon("srce.gif", 63, 63, "poeta", "zivotopis.html") + icon("pero.gif", 64, 96, "izdavaštvo", "knjige.html") +
@@ -148,15 +162,15 @@
       '<p class="tm-verse">Ivan Benak mi je ime,<br>pjesnik koji piše rime,<br>ulica se pisat mora,<br>Pejačević slavna Dora,<br>' +
       "ako netko me potraži,<br>moje kuće broj pet važi,<br>još dodajte mjesto moje,<br>znajte slavno Valpovo je,<br>" +
       "a telefon stalno vrijedan:<br>nula trideset i jedan,<br>šesto pedeset i dva,<br>osamsto dvadeset jedan.</p>" +
-      '<p class="tm-small">(Taj broj više nije u upotrebi · <i>that number is no longer in use</i>)</p>' +
+      '<p class="tm-small">(' + bi("Taj broj više nije u upotrebi", "<i>that number is no longer in use</i>") + ")</p>" +
       '<p class="tm-by">product by franCUZ</p><hr>' +
-      '<p class="tm-small">Najbolje pregledavati u Internet Exploreru 5.0 pri razlučivosti 800×600 · free-os.htnet.hr/benak</p>';
+      '<p class="tm-small">Najbolje pregledavati u Internet Exploreru 5.0 pri razlučivosti 800×600 · free-os.htnet.hr/benak</p></div>';
     document.body.appendChild(t);
     document.body.classList.add("tm-on");
     var pg = document.querySelector(".page");
     if (pg) pg.inert = true;                     // modal: Tab stays in 2003
     t.setAttribute("aria-modal", "true");
-    var d = openDialog(t, "Stranica iz 2003. · The site in 2003", function () {
+    var d = openDialog(t, ["Stranica iz 2003.", "The site in 2003"], function () {
       t.remove(); document.body.classList.remove("tm-on");
       if (pg) pg.inert = false;
     });
@@ -196,7 +210,7 @@
       k.style.left = (window.innerWidth + 140) + "px";
       setTimeout(function () { k.remove(); }, calm ? 10 : 4200);
     };
-    var dk = openDialog(k, "Mače · The kitten", leave, true);   // Esc sends it away even while it walks in
+    var dk = openDialog(k, ["Mače", "The kitten"], leave, true);   // Esc sends it away even while it walks in
     setTimeout(function () {
       if (gone) return;
       k.classList.remove("walking");
@@ -208,8 +222,9 @@
       if (E.mace) {
         var b = document.createElement("div");
         b.className = "kitty-say";
-        b.innerHTML = "<p>" + E.mace.hr.map(esc).join("<br>") + '</p><p lang="en"><i>' + E.mace.en.map(esc).join("<br>") + "</i></p>" +
-          '<a href="' + ROOT + 'pjesme/zaspalo-mace.html">— Zaspalo mače</a>';
+        b.innerHTML = '<p lang="hr">' + E.mace.hr.map(esc).join("<br>") + '</p><p lang="en"><i>' + E.mace.en.map(esc).join("<br>") + "</i></p>" +
+          '<a href="' + ROOT + 'pjesme/zaspalo-mace.html">— <span lang="hr">' + esc(E.mace.th || "Zaspalo mače") + "</span>" +
+          '<span lang="en" class="solo">' + esc(E.mace.te || E.mace.th || "Zaspalo mače") + "</span></a>";
         b.tabIndex = -1;
         k.appendChild(b);
         if (focusIt) b.focus({ preventScroll: true });
@@ -227,9 +242,10 @@
     setTimeout(function () { withData(function () {
       if (document.querySelector(".w95.phone-win")) return;
       var ad = pickOne(E.ads.length ? E.ads : [{ s: "podaci-o-pjesniku", th: "", te: "", hr: [], en: [] }]);
-      win("Radio burza · 031/652-821",
-        '<p class="phone-hello">&#9742; Halo, Ivo ovdje! <i lang="en">Hello, Ivo speaking!</i></p>' +
-        '<p class="w95-small">Imam nešto za vas… · <i lang="en">I have something for you…</i></p>' + excerpt(ad), "phone-win");
+      win(["Radio burza · 031/652-821", "Radio ads · 031/652-821", "Radio burza · 031/652-821"],
+        '<p class="phone-hello">&#9742; <span lang="hr">Halo, Ivo ovdje!</span> <i lang="en">Hello, Ivo speaking!</i></p>' +
+        '<p class="w95-small">' + bi("Imam nešto za vas…", "<i>I have something for you…</i>") + "</p>" + excerpt(ad), "phone-win",
+        '<span lang="hr">Radio burza</span><span lang="en" class="solo">Radio ads</span> · 031/652-821');
     }); }, 2300);
   }
 
@@ -253,7 +269,7 @@
     }
     setTimeout(function () { withData(function () {
       if (!E.love.length || document.querySelector(".w95.love-win")) return;
-      win("Ljubavna pjesma · A love poem", excerpt(pickOne(E.love)), "love-win");
+      win(["Ljubavna pjesma", "A love poem"], excerpt(pickOne(E.love)), "love-win");
     }); }, calm ? 0 : 1600);
   }
 

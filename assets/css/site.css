@@ -315,7 +315,6 @@ table.index .letter td { border-bottom: 1px solid var(--rule); font-style: norma
   margin: 8px 16px 0 !important; padding-top: 8px; border-top: 1px dotted var(--rule); font-size: 12.5px;
 }
 .foot-bottom a { white-space: nowrap; }
-html.show-en .foot .fh { display: none; }
 /* both languages: English on its own line under longer texts, a middle dot between short labels */
 .foot p > span[lang="en"], .foot-mem small > span[lang="en"], .foot-mem > span[lang="en"] { display: block; }
 html.show-hr .foot p > span[lang="en"], html.show-hr .foot-mem small > span[lang="en"], html.show-hr .foot-mem > span[lang="en"] { display: none; }
@@ -554,7 +553,7 @@ html.show-both .foot .lbl span[lang="en"]::before, html.show-both .foot-bottom >
 @media (max-width: 760px) {
   .nav2 { gap: 6px; padding: 8px; }
   .ng-home { flex-direction: row; gap: 6px; width: 100%; min-width: 0; padding: 3px 8px; }
-  .ng-home small::before { content: "· "; }
+  html.show-both .ng-home small::before { content: "· "; }
   .ng-home img { width: 20px; height: 20px; margin: 0; }
   .ng { width: 100%; }
   .ng ul { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
@@ -732,8 +731,6 @@ html.show-en .m > .hr, html.show-en .lang-bar span:first-child { display: none; 
 html.show-hr .m > div, html.show-en .m > div { border-left: 0; border-top: 0; max-width: 720px; margin: 0 auto; width: 100%; }
 html.show-hr .lang-bar span, html.show-en .lang-bar span { max-width: 720px; margin: 0 auto; width: 100%; border: 0 !important; }
 html.show-en .poem .m.stanza > .en, html.show-hr .poem .m.stanza > .hr { padding-left: 18px; }
-/* mixed-language small print follows the switch too */
-html.show-hr .foot [lang="en"], html.show-hr .nav2 small, html.show-hr .ng-label i { display: none; }
 
 @media (max-width: 760px) {
   .topbar { justify-content: center; padding: 5px 6px; }
@@ -836,7 +833,10 @@ html.show-hr .t-sep, html.show-hr .t-en, html.show-en .t-sep, html.show-en .t-hr
 .dbox-h a { font-weight: bold; color: var(--red); text-decoration: none; }
 .dbox-h a:hover { text-decoration: underline; }
 .dbox-h a::after { content: " \2192"; }
-.dbox-h i, .dbox-t i { display: block; font-size: 14px; color: var(--ink-soft); }
+.dbox-h a[lang="en"] { display: block; }
+html.show-both .dbox-h a[lang="en"] { font-size: 14px; font-weight: normal; font-style: italic; color: var(--ink-soft); }
+html.show-both .dbox-h a[lang="en"]::after { content: none; }
+.dbox-t i { display: block; font-size: 14px; color: var(--ink-soft); }
 .dbox-t { margin: 0; font-size: 14.5px; line-height: 1.4; }
 .dbox-t i { margin-top: 2px; }
 .dform { display: flex; gap: 4px; margin: 8px 0 0 -50px; }
@@ -850,7 +850,6 @@ html.show-hr .t-sep, html.show-hr .t-en, html.show-en .t-sep, html.show-en .t-hr
 }
 .dform button i { font-size: 12px; color: var(--ink-soft); }
 .dform button:active { border-style: inset; }
-html.show-hr .dbox i[lang="en"], html.show-hr .dform button i { display: none; }
 @media (max-width: 760px) {
   .discover { grid-template-columns: 1fr; gap: 8px; }
   .dform { margin-left: 0; }
@@ -876,13 +875,12 @@ html.show-hr .dbox i[lang="en"], html.show-hr .dform button i { display: none; }
 .vids .yt { margin: 8px auto 4px; }
 .vcred { text-align: left; max-width: 480px; margin: 0 auto 8px; font-style: normal; }
 .vcred b { display: block; font-weight: normal; font-style: italic; color: var(--ink); }
-.vcred span { display: block; overflow-wrap: anywhere; }
+.vcred > span { display: block; overflow-wrap: anywhere; }
 .song-rights { font-size: 13.5px; color: var(--ink-soft); font-style: italic; }
 
 /* ---------- gallery: captions wrap in full and follow the language switch ---------- */
 .gallery .cap { overflow-wrap: anywhere; hyphens: auto; }
 .gallery .cap > span { display: block; }
-html.show-hr .gallery .cap [lang="en"], html.show-en .gallery .cap .c-hr { display: none; }
 h1.cap, .h1-en.cap { font-size: 17px; line-height: 1.4; color: var(--ink-soft); margin: 6px 0 4px; }
 
 /* ---------- 404 ---------- */
@@ -985,3 +983,33 @@ html.show-en .topc-chip .t-en { display: inline; }
 .story-fig { max-width: 460px; margin: 10px auto 16px; text-align: center; }
 .story-fig img { max-width: 100%; height: auto; border: 3px ridge var(--bevel-lo); background: #fffdf6; padding: 4px; box-shadow: 3px 4px 0 rgba(90, 70, 40, .12); }
 .story-fig .cap { margin-top: 4px; }
+
+/* ---------- one language means one language everywhere ----------
+   Every UI string sits in an element marked lang="hr" or lang="en" (tools/build.py, and the scripts for what they
+   build). A single-language mode hides every element of the other language; .t-sep (the " · ", " / " or line break
+   between the two versions) is shown only when both are; .solo is a version shown only in its own single mode
+   (both-mode shows the Croatian alone there). .keep-lang: the 2003 replica, shown as it was in every mode. */
+html.show-hr body [lang="en"]:not(.keep-lang), html.show-en body [lang="hr"]:not(.keep-lang) { display: none !important; }
+html.show-hr .t-sep, html.show-en .t-sep { display: none !important; }
+html.show-both .solo { display: none !important; }
+/* the English half of a pair is styled as the quieter second line; alone, it takes the main look */
+html.show-en .ng a small, html.show-en .ng-home small { font-size: inherit; font-style: normal; color: inherit; }
+html.show-en .ng-label i, html.show-en .langsw-label i { font-style: normal; text-transform: uppercase; letter-spacing: .12em; opacity: 1; }
+html.show-en .langsw-label i { letter-spacing: .1em; }
+html.show-en .nav-toggle i { font-size: inherit; font-style: normal; color: inherit; }
+html.show-en .foot [lang="en"] { font-style: normal; }
+html.show-en .foot h2 i { text-transform: uppercase; letter-spacing: .08em; font-weight: bold; color: var(--red); }
+html.show-en .qotd .qd-date i { font-style: normal; color: var(--ink); }
+html.show-en .qotd .qd-occ i { color: var(--red); }
+html.show-en .bday-title i { display: inline; font-size: inherit; font-style: normal; font-variant: small-caps; color: var(--red); }
+html.show-en .wcal-months button small { font-size: 12.5px; font-style: normal; color: inherit; }
+html.show-en .wcal-dow span small { font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; font-style: normal; }
+html.show-en .wcal-title { display: flex; justify-content: center; align-items: baseline; gap: .3em; }
+html.show-en .wcal-title small { order: -1; font-size: inherit; font-style: normal; font-variant: small-caps; letter-spacing: .06em; opacity: 1; }
+html.show-en .dbox-t i, html.show-en .dform button i, html.show-en .pchips button i, html.show-en .plegend i,
+html.show-en .phone-hello i { font-size: inherit; font-style: normal; color: inherit; }
+html.show-en #tm2003 .tm-banner i, html.show-en #tm2003 .tm-back i { font-weight: bold; font-style: normal; }
+html.show-hr .w95-cols, html.show-en .w95-cols { grid-template-columns: 1fr; }
+html.show-hr .w95-cols > div + div, html.show-en .w95-cols > div + div { border-left: 0; padding-left: 0; font-style: normal; }
+html.show-en #pmap .reg-en { font-size: 20px; font-weight: bold; fill: #4a3b2c; }
+@media (max-width: 760px) { html.show-en #pmap .reg-en { font-size: 26px; } }
