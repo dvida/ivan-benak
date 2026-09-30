@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pronađi pjesmu · Find a poem — Ivan Benak</title>
+<meta name="description" content="Ivan Benak (1933. – 2015.), pučki pjesnik iz Sopja i Valpova. Pjesme na hrvatskom s engleskim prijevodom.">
+<link rel="stylesheet" href="assets/css/site.css">
+<link rel="icon" href="assets/img/orig/pero.gif">
+</head>
+<body class="show-hr">
+<div class="page">
+<header class="masthead">
+  <img src="assets/img/orig/pero.gif" width="64" height="96" alt="">
+  <div>
+    <p class="name"><a href="index.html">Ivan Benak</a></p>
+    <p class="sub">pučki pjesnik · <span lang="en">folk poet</span> &nbsp;·&nbsp; <span class="years">Sopje 1933. – Valpovo 2015.</span></p>
+  </div>
+  <img src="assets/img/orig/srce.gif" width="63" height="63" alt="">
+</header>
+<div class="vez" aria-hidden="true"></div>
+<nav><ul class="nav">
+<li><a href="index.html">Naslovnica<small>Home</small></a></li>
+<li><a href="zivotopis.html">Životopis<small>Biography</small></a></li>
+<li><a href="pjesme/index.html">Pjesme<small>Poems</small></a></li>
+<li><a href="trazilica.html" aria-current="page">Pronađi pjesmu<small>Find a poem</small></a></li>
+<li><a href="knjige.html">Knjige<small>Books</small></a></li>
+<li><a href="uglazbljene.html">Uglazbljene pjesme<small>Songs</small></a></li>
+<li><a href="misao-dana.html">Misao dana<small>Thought of the day</small></a></li>
+<li><a href="galerija.html">Galerija<small>Gallery</small></a></li>
+<li><a href="prijatelji.html">Riječi prijatelja<small>Words of friends</small></a></li>
+</ul></nav>
+<div class="lang-toggle" role="group" aria-label="Jezik / Language">
+  <button type="button" data-lang="hr" aria-pressed="true">Hrvatski</button>
+  <button type="button" data-lang="both" aria-pressed="false">Oboje · Both</button>
+  <button type="button" data-lang="en" aria-pressed="false">English</button>
+</div>
+<main>
+<div class="lang-bar" aria-hidden="true"><span>Hrvatski · izvornik</span><span>English · translation</span></div>
+<div class="m title"><div class="hr" lang="hr"><h1>Pronađi pjesmu</h1><p>Upišite osjećaj, temu ili nekoliko riječi, na hrvatskom ili engleskom, i stranica će potražiti pjesme koje im odgovaraju. Sve pjesme ručno su označene raspoloženjima i temama, pa pretraživanje razumije i riječi kojih u samoj pjesmi nema.</p></div><div class="en" lang="en"><h1>Find a poem</h1><p>Type a feeling, a theme or a few words, in Croatian or in English, and the page will look for the poems that fit. Every poem has been tagged by hand with its moods and themes, so the search also understands words that don&#x27;t appear in the poem itself.</p></div></div>
+
+<form id="pform" class="pform" role="search">
+  <label for="pq" class="kicker">Što osjećate ili što tražite? · <span lang="en">What are you feeling, or looking for?</span></label>
+  <div class="pbox"><input id="pq" type="search" autocomplete="off" placeholder="npr. tuga, majka, zima na selu … / e.g. missing home, something funny"><button type="submit">Traži · Search</button></div>
+  <div id="pchips" class="pchips"></div>
+</form>
+<div id="presults" aria-live="polite"></div>
+<hr class="orn">
+<div class="m"><div class="hr" lang="hr"><h2>Karta pjesama</h2><p>Svaka točka je jedna pjesma. Pjesme sličnog raspoloženja i teme leže blizu jedna drugoj. Prijeđite mišem preko točke da vidite naslov, kliknite da je otvorite. Rezultati pretraživanja zasvijetle na karti.</p></div><div class="en" lang="en"><h2>A map of the poems</h2><p>Each dot is one poem. Poems with a similar mood and theme lie close together. Hover over a dot to see its title, and click to open it. Search results light up on the map.</p></div></div>
+<div class="pmapwrap"><svg id="pmap" viewBox="0 0 1000 720" role="img" aria-label="Karta pjesama / Map of the poems"></svg>
+<div id="ptip" class="ptip" hidden></div></div>
+<div id="plegend" class="plegend"></div>
+<noscript><p class="pending">Za tražilicu i kartu potreban je JavaScript. · <span lang="en">The search and the map need JavaScript.</span></p></noscript>
+</main>
+<footer class="foot">
+  <p>U spomen na Ivana Benaka &nbsp;·&nbsp; <span lang="en">In memory of Ivan Benak</span></p>
+  <p>Stranicu u spomen na djeda izradio unuk Denis Vida, 2026. &nbsp;·&nbsp; <span lang="en">Made in memory of his grandfather by grandson Denis Vida, 2026.</span></p>
+  <p>Posljednja izmjena: 29. rujna 2026. &nbsp;·&nbsp; <span lang="en">Last updated: September 29, 2026</span></p>
+  <p>Izvornu stranicu (2003.) izradio je Dragan Francuz – <i>franCUZ</i>: <a href="https://web.archive.org/web/20050421065345/http://free-os.htnet.hr/benak/">free-os.htnet.hr/benak</a> &nbsp;·&nbsp; <span lang="en">The original site (2003) was made by Dragan Francuz, “franCUZ”.</span></p>
+</footer>
+</div>
+<script src="assets/js/quotes.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/finder-data.js"></script><script src="assets/js/finder.js"></script>
+</body>
+</html>
