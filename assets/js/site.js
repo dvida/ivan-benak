@@ -14,23 +14,25 @@
     nt.setAttribute("aria-expanded", open ? "true" : "false");
   });
 
-  /* ---- HR / EN / both toggle (only visible on narrow screens) ---- */
+  /* ---- site-wide language switch: HR / HR+EN / EN (remembered per browser) ---- */
   function setLang(mode) {
     document.body.classList.remove("show-hr", "show-en", "show-both");
     document.body.classList.add("show-" + mode);
-    var btns = document.querySelectorAll(".lang-toggle button");
+    var btns = document.querySelectorAll(".langsw button");
     for (var i = 0; i < btns.length; i++) {
       btns[i].setAttribute("aria-pressed", btns[i].getAttribute("data-lang") === mode ? "true" : "false");
     }
+    document.documentElement.lang = mode === "en" ? "en" : "hr";
     store.set("benak-lang", mode);
   }
-  var toggle = document.querySelector(".lang-toggle");
-  if (toggle) {
-    toggle.addEventListener("click", function (e) {
+  var sw = document.querySelector(".langsw");
+  if (sw) {
+    sw.addEventListener("click", function (e) {
       var b = e.target.closest("button[data-lang]");
       if (b) setLang(b.getAttribute("data-lang"));
     });
-    setLang(store.get("benak-lang") || "hr");
+    // default: both languages side by side on wide screens, Croatian first on phones
+    setLang(store.get("benak-lang") || (window.matchMedia("(max-width: 760px)").matches ? "hr" : "both"));
   }
 
   /* ---- tap a stanza to light up its twin (touch screens have no hover) ---- */

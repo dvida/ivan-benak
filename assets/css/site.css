@@ -291,7 +291,6 @@ table.index .letter td { border-bottom: 1px solid var(--rule); font-style: norma
 .foot p { margin: 2px 0; }
 
 /* ---------- small screens ---------- */
-.lang-toggle { display: none; }
 @media (max-width: 760px) {
   body { padding: 0; font-size: 17px; }
   .page { border: 0; box-shadow: none; }
@@ -301,33 +300,12 @@ table.index .letter td { border-bottom: 1px solid var(--rule); font-style: norma
   .masthead .name { font-size: 32px; }
   .nav a { padding: 2px 8px 3px; font-size: 14px; }
 
-  .lang-toggle {
-    display: flex;
-    position: sticky; top: 0; z-index: 5;
-    justify-content: center;
-    gap: 4px;
-    padding: 6px;
-    background: var(--paper-2);
-    border-bottom: 1px solid var(--rule);
-  }
-  .lang-toggle button {
-    font: inherit; font-size: 14px;
-    padding: 2px 12px;
-    background: var(--paper);
-    color: var(--ink);
-    border: 2px outset var(--bevel-hi);
-    border-right-color: var(--bevel-lo); border-bottom-color: var(--bevel-lo);
-  }
-  .lang-toggle button[aria-pressed="true"] { border-style: inset; background: #efe4c8; }
+
 
   .m, .lang-bar { grid-template-columns: 1fr; }
   .m > .en { border-left: 0; border-top: 1px dotted var(--rule); }
   .lang-bar span + span { border-left: 0; }
   .m > .hr, .m > .en { padding-left: 4px; padding-right: 4px; }
-  body.show-hr .m > .en, body.show-hr .lang-bar span + span { display: none; }
-  body.show-en .m > .hr, body.show-en .lang-bar span:first-child { display: none; }
-  body.show-en .m > .en { border-top: 0; }
-  body.show-both .m > .en { color: var(--ink-soft); }
 
   .portrait { float: none; margin: 6px auto 12px; max-width: 260px; }
   .book { grid-template-columns: 1fr; }
@@ -341,7 +319,7 @@ table.index .letter td { border-bottom: 1px solid var(--rule); font-style: norma
 
 @media print {
   body, html { background: #fff; }
-  .nav, .lang-toggle, .vez, .pager { display: none; }
+  .nav, .nav2, .nav-toggle, .langsw, .vez, .pager { display: none; }
   .page { border: 0; box-shadow: none; }
 }
 
@@ -668,3 +646,42 @@ body.tm-on { overflow: hidden; }
 .tm-by { font-size: 11px; color: #333; margin-top: 18px; font-style: italic; }
 .tm-small { font-size: 11px; color: #334; }
 .qotd .qsig { display: block; margin-top: 3px; font-style: italic; }
+
+/* ---------- site-wide language switch (top-right) ---------- */
+.topbar {
+  display: flex; justify-content: flex-end; align-items: center;
+  padding: 6px 10px 5px; background: var(--paper-2); border-bottom: 1px solid var(--rule);
+}
+.langsw { display: flex; align-items: center; gap: 3px; }
+.langsw-label { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); margin-right: 6px; }
+.langsw-label i { text-transform: none; letter-spacing: .02em; }
+.langsw button {
+  font: inherit; cursor: pointer; color: var(--ink); background: var(--paper);
+  padding: 3px 10px 2px; line-height: 1.1; text-align: center; min-width: 56px;
+  border: 2px outset var(--bevel-hi); border-right-color: var(--bevel-lo); border-bottom-color: var(--bevel-lo);
+}
+.langsw button b { display: block; font-size: 14px; letter-spacing: .04em; }
+.langsw button small { display: block; font-size: 10.5px; font-style: italic; color: var(--ink-soft); }
+.langsw button:hover { background: var(--hi); }
+.langsw button[aria-pressed="true"] {
+  background: var(--red); color: #fff; border-style: inset; border-color: #6d171a #d77a7c #d77a7c #6d171a;
+}
+.langsw button[aria-pressed="true"] small { color: #f3d6d6; }
+
+/* one language only: a single, centred reading column */
+body.show-hr .m, body.show-en .m, body.show-hr .lang-bar, body.show-en .lang-bar { grid-template-columns: 1fr; }
+body.show-hr .m > .en, body.show-hr .lang-bar span + span { display: none; }
+body.show-en .m > .hr, body.show-en .lang-bar span:first-child { display: none; }
+body.show-hr .m > div, body.show-en .m > div { border-left: 0; border-top: 0; max-width: 720px; margin: 0 auto; width: 100%; }
+body.show-hr .lang-bar span, body.show-en .lang-bar span { max-width: 720px; margin: 0 auto; width: 100%; border: 0 !important; }
+body.show-en .poem .m.stanza > .en, body.show-hr .poem .m.stanza > .hr { padding-left: 18px; }
+/* mixed-language small print follows the switch too */
+body.show-hr .foot [lang="en"], body.show-hr .nav2 small, body.show-hr .ng-label i { display: none; }
+
+@media (max-width: 760px) {
+  .topbar { justify-content: center; padding: 5px 6px; }
+  .langsw { width: 100%; }
+  .langsw-label { display: none; }
+  .langsw button { flex: 1; }
+  body.show-both .m > .en { color: var(--ink-soft); border-top: 1px dotted var(--rule); }
+}
