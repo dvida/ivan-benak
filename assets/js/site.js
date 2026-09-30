@@ -57,6 +57,11 @@
       });
     };
     var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+    var godina = function (n) {        // 1 godinu, 2–4 godine, 5+ godina (11–14 always godina)
+      var d = n % 10, h = n % 100;
+      if (h >= 11 && h <= 14) return "godina";
+      return d === 1 ? "godinu" : (d >= 2 && d <= 4) ? "godine" : "godina";
+    };
     var d = new Date();
     var m = /[?&]dan=(\d{4})-(\d{2})-(\d{2})/.exec(window.location.search);
     var h = /^#d-(\d{2})-(\d{2})$/.exec(window.location.hash);
@@ -76,6 +81,21 @@
         q = Q[(day * 37) % Q.length];
       }
       var href = root + "pjesme/" + q.slug + ".html";
+      var bday = q.special === "birthday";
+      box.classList.toggle("bday", bday);
+      var ban = box.querySelector(".bday-banner");
+      if (bday && !ban) {
+        ban = document.createElement("div");
+        ban.className = "bday-banner";
+        box.insertBefore(ban, box.firstChild);
+      }
+      if (ban) {
+        var age = date.getFullYear() - 1933;
+        ban.hidden = !bday;
+        ban.innerHTML = '<span class="bunting" aria-hidden="true"></span>' +
+          '<p class="bday-title">Sretan rođendan, Ivo! <i lang="en">Happy birthday, Ivo!</i></p>' +
+          '<p class="bday-sub">Danas bi navršio ' + age + " " + godina(age) + ' · <span lang="en">Today he would have turned ' + age + "</span></p>";
+      }
       box.querySelector(".hr blockquote").innerHTML = q.hr.map(esc).join("<br>");
       box.querySelector(".en blockquote").innerHTML = q.en.map(esc).join("<br>");
       box.querySelector(".hr .src").innerHTML = "— iz pjesme <a href=\"" + href + "\">" + esc(q.title_hr) + "</a>";
@@ -112,7 +132,7 @@
           ((lead + dd - 1) % 7 === 6 ? " sun" : "");
         var tip = q.occ_hr ? q.occ_hr + (q.occ_en ? " · " + q.occ_en : "") : (q.title_hr || "");
         html += '<button type="button" class="' + cls + '" data-d="' + dd + '" title="' + esc(tip) + '">' + dd +
-          (occ ? '<i class="mark"></i>' : written ? '<i class="pen">&#10002;</i>' : "") + "</button>";
+          (q.special === "birthday" ? '<i class="cake">&#9829;</i>' : occ ? '<i class="mark"></i>' : written ? '<i class="pen">&#10002;</i>' : "") + "</button>";
       }
       grid.innerHTML = html;
       document.getElementById("wcal-mhr").textContent = MHRN[view.m];
