@@ -31,8 +31,7 @@
       var b = e.target.closest("button[data-lang]");
       if (b) setLang(b.getAttribute("data-lang"));
     });
-    // default: both languages side by side on wide screens, Croatian first on phones
-    setLang(store.get("benak-lang") || (window.matchMedia("(max-width: 760px)").matches ? "hr" : "both"));
+    setLang(store.get("benak-lang") || "both");   // default: both languages, side by side (stacked on phones)
   }
 
   /* ---- tap a stanza to light up its twin (touch screens have no hover) ---- */
