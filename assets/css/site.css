@@ -282,15 +282,51 @@ table.index .letter td { border-bottom: 1px solid var(--rule); font-style: norma
 
 /* ---------- footer ---------- */
 .foot {
-  margin-top: 10px;
-  padding: 12px 20px 16px;
-  border-top: 1px solid var(--rule);
+  margin-top: 18px;
+  padding: 0 0 12px;
+  border-top: 3px ridge var(--bevel-lo);
   background: var(--paper-2);
   font-size: 13.5px;
+  line-height: 1.5;
   color: var(--ink-soft);
-  text-align: center;
 }
-.foot p { margin: 2px 0; }
+.foot .vez { margin: 0 0 12px; }
+.foot p { margin: 4px 0; }
+.foot [lang="en"] { font-style: italic; }
+.foot-mem { text-align: center; font-size: 15px; color: var(--ink); padding: 0 16px; }
+.foot-mem img { vertical-align: -5px; margin-right: 4px; }
+.foot-mem small { display: block; margin-top: 4px; font-size: 13px; color: var(--ink-soft); }
+.foot-cols {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+  margin: 12px 16px 6px; border: 1px solid var(--rule); background: var(--paper);
+}
+.foot-cols section { padding: 10px 14px 12px; }
+.foot-cols section + section { border-left: 1px dotted var(--rule); }
+.foot h2 {
+  margin: 0 0 6px; font-size: 12.5px; font-weight: bold; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--red);
+}
+.foot h2 i { text-transform: none; letter-spacing: 0; font-weight: normal; color: var(--ink-soft); }
+.foot ul { list-style: none; margin: 0; padding: 0; }
+.foot li { margin: 2px 0; }
+.foot li a::before { content: "\00BB\00A0"; color: var(--red-soft); }
+.foot-bottom {
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px;
+  margin: 8px 16px 0 !important; padding-top: 8px; border-top: 1px dotted var(--rule); font-size: 12.5px;
+}
+.foot-bottom a { white-space: nowrap; }
+html.show-en .foot .fh { display: none; }
+/* both languages: English on its own line under longer texts, a middle dot between short labels */
+.foot p > span[lang="en"], .foot-mem small > span[lang="en"], .foot-mem > span[lang="en"] { display: block; }
+html.show-hr .foot p > span[lang="en"], html.show-hr .foot-mem small > span[lang="en"], html.show-hr .foot-mem > span[lang="en"] { display: none; }
+html.show-both .foot a span[lang="en"]::before, html.show-both .foot h2 i::before,
+html.show-both .foot .lbl span[lang="en"]::before, html.show-both .foot-bottom > span > span[lang="en"]::before { content: "· "; font-style: normal; }
+.foot-bottom > span > span[lang="en"] { display: inline !important; }
+@media (max-width: 760px) {
+  .foot-cols { grid-template-columns: 1fr; }
+  .foot-cols section + section { border-left: 0; border-top: 1px dotted var(--rule); }
+  .foot-bottom { justify-content: center; text-align: center; }
+}
 
 /* ---------- small screens ---------- */
 @media (max-width: 760px) {
@@ -754,3 +790,29 @@ a:focus-visible { outline-style: dotted; outline-width: 2px; background: var(--h
 @media (max-width: 760px) {           /* stacked: a name like BALTAZAR needs saying only once */
   html.show-both .poem .m.stanza.subhead.same > .en { display: none; }
 }
+.phone-note { margin: 2px 0 0; font-size: 13px; font-style: italic; color: var(--ink-soft); opacity: .8; }
+.qotd .qnote { display: block; margin-top: 6px; padding-top: 5px; border-top: 1px dotted var(--rule); font-size: 14px; font-style: normal; }
+
+/* ---------- another version of a poem (merged duplicates): a closed <details> under the poem ---------- */
+details.variant { margin: 18px 0 6px; border: 1px dashed var(--rule); background: var(--paper-2); }
+details.variant > summary { cursor: pointer; padding: 6px 12px; font-size: 15.5px; color: var(--ink-soft); list-style-position: inside; }
+details.variant > summary:hover { background: var(--hi); }
+details.variant > summary [lang="en"] { display: block; }
+details.variant > summary [lang="en"] { font-style: italic; margin-left: 1.1em; }
+details.variant > summary b { font-weight: normal; color: var(--ink); }
+details.variant[open] > summary { border-bottom: 1px dotted var(--rule); }
+details.variant .vlabel { font-size: 14.5px; font-style: italic; color: var(--ink-soft); margin: 4px 0 0; }
+html.show-hr details.variant > summary [lang="en"], html.show-en details.variant > summary .vh { display: none; }
+html.show-en details.variant > summary [lang="en"] { margin-left: 0; }
+.related { font-size: 15px; margin-top: 14px; padding-top: 6px; border-top: 1px dotted var(--rule); }
+
+/* ---------- long category pages: selected poems, jump list, subheadings ---------- */
+.picks { border: 3px double var(--red-soft); background: #fffaf0; padding: 4px 8px 8px; margin: 12px 0 14px; }
+.picks .kicker { text-align: center; color: var(--red); padding: 4px 0 4px; }
+.picks table.index td { border-bottom: 0; }
+.jump { font-size: 15px; line-height: 1.9; }
+.jump .count, table.index .sg .count { color: var(--ink-soft); font-size: 13.5px; font-weight: normal; }
+table.index .sg td + td { font-style: italic; font-weight: normal; }
+table.index .sg .sg-top { float: right; font-style: normal; text-decoration: none; padding: 0 2px; }
+table.index tr.lost td { color: var(--ink-soft); }
+main.moved { max-width: 640px; margin: 40px auto; padding: 16px; }

@@ -102,9 +102,11 @@
       box.querySelector(".hr blockquote").innerHTML = q.hr.map(esc).join("<br>");
       box.querySelector(".en blockquote").innerHTML = q.en.map(esc).join("<br>");
       box.querySelector(".hr .src").innerHTML = "— iz pjesme <a href=\"" + href + "\">" + esc(q.title_hr) + "</a>" +
-        (q.sig_hr ? '<span class="qsig">' + esc(q.sig_hr) + "</span>" : "");
+        (q.sig_hr ? '<span class="qsig">' + esc(q.sig_hr) + "</span>" : "") +
+        (q.note_hr ? '<span class="qnote">' + esc(q.note_hr) + (q.note_url ? ' <a href="' + esc(q.note_url) + '">Karta groba &rarr;</a>' : "") + "</span>" : "");
       box.querySelector(".en .src").innerHTML = "— from <a href=\"" + href + "\">" + esc(q.title_en) + "</a>" +
-        (q.sig_en ? '<span class="qsig">' + esc(q.sig_en) + "</span>" : "");
+        (q.sig_en ? '<span class="qsig">' + esc(q.sig_en) + "</span>" : "") +
+        (q.note_en ? '<span class="qnote">' + esc(q.note_en) + (q.note_url ? ' <a href="' + esc(q.note_url) + '">Map of the grave &rarr;</a>' : "") + "</span>" : "");
       var lab = document.getElementById("qday");
       if (lab) lab.innerHTML = '<span class="qd-date">' + date.getDate() + ". " + MHR[date.getMonth()] +
         ' <span class="qd-sep">·</span> <i lang="en">' + MEN[date.getMonth()] + " " + date.getDate() + "</i></span>" +
@@ -243,4 +245,15 @@
     b.parentNode.replaceChild(wrap, b);
     f.focus();                                      // keyboard users land on the player they asked for
   });
+})();
+
+/* ---- another version of a poem: open its <details> when the URL points at it (old links redirect to #inacica-...) ---- */
+(function () {
+  function openFromHash() {
+    var id = window.location.hash.slice(1);
+    var d = id && document.getElementById(decodeURIComponent(id));
+    if (d && d.tagName === "DETAILS") { d.open = true; d.scrollIntoView(); }
+  }
+  openFromHash();
+  window.addEventListener("hashchange", openFromHash);
 })();

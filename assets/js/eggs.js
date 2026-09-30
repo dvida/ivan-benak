@@ -129,6 +129,7 @@
       '<p class="tm-verse">Ivan Benak mi je ime,<br>pjesnik koji piše rime,<br>ulica se pisat mora,<br>Pejačević slavna Dora,<br>' +
       "ako netko me potraži,<br>moje kuće broj pet važi,<br>još dodajte mjesto moje,<br>znajte slavno Valpovo je,<br>" +
       "a telefon stalno vrijedan:<br>nula trideset i jedan,<br>šesto pedeset i dva,<br>osamsto dvadeset jedan.</p>" +
+      '<p class="tm-small">(Taj broj više nije u upotrebi · <i>that number is no longer in use</i>)</p>' +
       '<p class="tm-by">product by franCUZ</p><hr>' +
       '<p class="tm-small">Najbolje pregledavati u Internet Exploreru 5.0 pri razlučivosti 800×600 · free-os.htnet.hr/benak</p>';
     document.body.appendChild(t);
