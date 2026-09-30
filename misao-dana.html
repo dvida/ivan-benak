@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="hr">
+<html lang="hr" class="show-both">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>(function(d){var m;try{m=localStorage.getItem("benak-lang")}catch(e){}if(m!=="hr"&&m!=="en")m="both";d.className="js show-"+m;if(m==="en")d.lang="en"})(document.documentElement)</script>
 <title>Misao dana · Thought of the day — Ivan Benak</title>
 <meta name="description" content="Ivan Benak (1933. – 2015.), pučki pjesnik iz Sopja i Valpova. Pjesme na hrvatskom s engleskim prijevodom.">
 <link rel="stylesheet" href="assets/css/site.css">
 <link rel="icon" href="assets/img/orig/pero.gif">
 </head>
-<body class="show-both">
+<body>
 <div class="page">
 <div class="topbar"><div class="langsw" role="group" aria-label="Jezik / Language">
   <span class="langsw-label" aria-hidden="true">Jezik · <i>Language</i></span>
@@ -43,15 +44,15 @@
 </section>
 
 <div class="wcal" id="wcal">
-  <div class="wcal-months" id="wcal-months"><button type="button" data-m="0">Sij<small>Jan</small></button><button type="button" data-m="1">Vel<small>Feb</small></button><button type="button" data-m="2">Ožu<small>Mar</small></button><button type="button" data-m="3">Tra<small>Apr</small></button><button type="button" data-m="4">Svi<small>May</small></button><button type="button" data-m="5">Lip<small>Jun</small></button><button type="button" data-m="6">Srp<small>Jul</small></button><button type="button" data-m="7">Kol<small>Aug</small></button><button type="button" data-m="8">Ruj<small>Sep</small></button><button type="button" data-m="9">Lis<small>Oct</small></button><button type="button" data-m="10">Stu<small>Nov</small></button><button type="button" data-m="11">Pro<small>Dec</small></button></div>
+  <div class="wcal-months" id="wcal-months" role="group" aria-label="Mjeseci / Months"><button type="button" data-m="0" aria-pressed="false" aria-label="Siječanj · January">Sij<small>Jan</small></button><button type="button" data-m="1" aria-pressed="false" aria-label="Veljača · February">Vel<small>Feb</small></button><button type="button" data-m="2" aria-pressed="false" aria-label="Ožujak · March">Ožu<small>Mar</small></button><button type="button" data-m="3" aria-pressed="false" aria-label="Travanj · April">Tra<small>Apr</small></button><button type="button" data-m="4" aria-pressed="false" aria-label="Svibanj · May">Svi<small>May</small></button><button type="button" data-m="5" aria-pressed="false" aria-label="Lipanj · June">Lip<small>Jun</small></button><button type="button" data-m="6" aria-pressed="false" aria-label="Srpanj · July">Srp<small>Jul</small></button><button type="button" data-m="7" aria-pressed="false" aria-label="Kolovoz · August">Kol<small>Aug</small></button><button type="button" data-m="8" aria-pressed="false" aria-label="Rujan · September">Ruj<small>Sep</small></button><button type="button" data-m="9" aria-pressed="false" aria-label="Listopad · October">Lis<small>Oct</small></button><button type="button" data-m="10" aria-pressed="false" aria-label="Studeni · November">Stu<small>Nov</small></button><button type="button" data-m="11" aria-pressed="false" aria-label="Prosinac · December">Pro<small>Dec</small></button></div>
   <div class="wcal-sheet">
     <div class="wcal-head">
       <button type="button" class="wcal-nav" id="wcal-prev" aria-label="Prethodni mjesec / Previous month">&#9664;</button>
       <div class="wcal-title"><span id="wcal-mhr"></span> <span class="wcal-year" id="wcal-year"></span><small id="wcal-men"></small></div>
       <button type="button" class="wcal-nav" id="wcal-next" aria-label="Sljedeći mjesec / Next month">&#9654;</button>
     </div>
-    <div class="wcal-dow"><span>Pon<small>Mon</small></span><span>Uto<small>Tue</small></span><span>Sri<small>Wed</small></span><span>Čet<small>Thu</small></span><span>Pet<small>Fri</small></span><span>Sub<small>Sat</small></span><span>Ned<small>Sun</small></span></div>
-    <div class="wcal-grid" id="wcal-grid"></div>
+    <div class="wcal-dow" aria-hidden="true"><span>Pon<small>Mon</small></span><span>Uto<small>Tue</small></span><span>Sri<small>Wed</small></span><span>Čet<small>Thu</small></span><span>Pet<small>Fri</small></span><span>Sub<small>Sat</small></span><span>Ned<small>Sun</small></span></div>
+    <div class="wcal-grid" id="wcal-grid" role="group" aria-label="Dani u mjesecu (strelicama se mijenja dan) / Days of the month (arrow keys move between days)"></div>
     <p class="wcal-key"><span class="k-occ"></span> blagdan ili spomendan · <i lang="en">feast or anniversary</i> &nbsp; <span class="k-pen">&#10002;</span> napisano na taj dan · <i lang="en">written on that day</i></p>
   </div>
 </div>

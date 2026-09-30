@@ -15,9 +15,10 @@
   });
 
   /* ---- site-wide language switch: HR / HR+EN / EN (remembered per browser) ---- */
-  function setLang(mode) {
-    document.body.classList.remove("show-hr", "show-en", "show-both");
-    document.body.classList.add("show-" + mode);
+  function setLang(mode) {       // the <head> script already set html.show-* before first paint
+    var de = document.documentElement;
+    de.classList.remove("show-hr", "show-en", "show-both");
+    de.classList.add("js", "show-" + mode);
     var btns = document.querySelectorAll(".langsw button");
     for (var i = 0; i < btns.length; i++) {
       btns[i].setAttribute("aria-pressed", btns[i].getAttribute("data-lang") === mode ? "true" : "false");
@@ -31,7 +32,8 @@
       var b = e.target.closest("button[data-lang]");
       if (b) setLang(b.getAttribute("data-lang"));
     });
-    setLang(store.get("benak-lang") || "both");   // default: both languages, side by side (stacked on phones)
+    var saved = store.get("benak-lang");
+    setLang(saved === "hr" || saved === "en" ? saved : "both");   // default: both languages, side by side (stacked on phones)
   }
 
   /* ---- tap a stanza to light up its twin (touch screens have no hover) ---- */
@@ -69,7 +71,7 @@
     if (m) d = new Date(+m[1], +m[2] - 1, +m[3]);
     else if (h) {
       var yy = new Date().getFullYear();
-      if (h[1] === "02" && h[2] === "29" && new Date(yy, 1, 29).getMonth() !== 1) yy = 2028;   // next leap year
+      if (h[1] === "02" && h[2] === "29") while (new Date(yy, 1, 29).getMonth() !== 1) yy++;   // next leap year
       d = new Date(yy, +h[1] - 1, +h[2]);
     }
     var byDay = {};
@@ -123,50 +125,97 @@
     var MHRN = ["Siječanj", "Veljača", "Ožujak", "Travanj", "Svibanj", "Lipanj", "Srpanj", "Kolovoz",
                 "Rujan", "Listopad", "Studeni", "Prosinac"];
     var view = { y: cur.getFullYear(), m: cur.getMonth() };
+    var DHR = ["nedjelja", "ponedjeljak", "utorak", "srijeda", "četvrtak", "petak", "subota"];
+    var DEN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     function drawMonth() {
       if (!grid) return;
       var first = new Date(view.y, view.m, 1), days = new Date(view.y, view.m + 1, 0).getDate();
       var lead = (first.getDay() + 6) % 7, today = new Date(), html = "";
-      for (var i = 0; i < lead; i++) html += '<span class="wcal-empty"></span>';
+      var inView = function (t) { return view.y === t.getFullYear() && view.m === t.getMonth(); };
+      // roving tabindex: one day is in the Tab order, the arrow keys move between the others
+      var f = view.f && view.f <= days ? view.f : inView(cur) ? cur.getDate() : inView(today) ? today.getDate() : 1;
+      view.f = f;
+      for (var i = 0; i < lead; i++) html += '<span class="wcal-empty" aria-hidden="true"></span>';
       for (var dd = 1; dd <= days; dd++) {
         var key = pad(view.m + 1) + "-" + pad(dd), q = byDay[key] || {};
         var written = q.occ_hr && /današnji dan/.test(q.occ_hr), occ = q.occ_hr && !written;
-        var cls = "wcal-day" + (occ ? " occ" : "") + (written ? " pen" : "") +
-          ((view.y === today.getFullYear() && view.m === today.getMonth() && dd === today.getDate()) ? " now" : "") +
-          ((view.y === cur.getFullYear() && view.m === cur.getMonth() && dd === cur.getDate()) ? " sel" : "") +
+        var isNow = inView(today) && dd === today.getDate(), isSel = inView(cur) && dd === cur.getDate();
+        var cls = "wcal-day" + (occ ? " occ" : "") + (written ? " pen" : "") + (isNow ? " now" : "") + (isSel ? " sel" : "") +
           ((lead + dd - 1) % 7 === 6 ? " sun" : "");
         var tip = q.occ_hr ? q.occ_hr + (q.occ_en ? " · " + q.occ_en : "") : (q.title_hr || "");
-        html += '<button type="button" class="' + cls + '" data-d="' + dd + '" title="' + esc(tip) + '">' + dd +
-          (q.special === "birthday" ? '<i class="cake">&#9829;</i>' : occ ? '<i class="mark"></i>' : written ? '<i class="pen">&#10002;</i>' : "") + "</button>";
+        var wd = new Date(view.y, view.m, dd).getDay();
+        var label = DHR[wd] + ", " + dd + ". " + MHR[view.m] + " " + view.y + ". · " + DEN[wd] + ", " + MEN[view.m] + " " + dd + ", " + view.y +
+          (isNow ? " · danas · today" : "") +
+          (q.occ_hr ? " – " + q.occ_hr + (q.occ_en && q.occ_en !== q.occ_hr ? " · " + q.occ_en : "") : "");
+        html += '<button type="button" class="' + cls + '" data-d="' + dd + '" title="' + esc(tip) + '" aria-label="' + esc(label) + '"' +
+          ' aria-pressed="' + (isSel ? "true" : "false") + '"' + (isNow ? ' aria-current="date"' : "") +
+          ' tabindex="' + (dd === f ? "0" : "-1") + '">' + dd +
+          (q.special === "birthday" ? '<i class="cake" aria-hidden="true">&#9829;</i>' : occ ? '<i class="mark"></i>' : written ? '<i class="pen" aria-hidden="true">&#10002;</i>' : "") + "</button>";
       }
       grid.innerHTML = html;
       document.getElementById("wcal-mhr").textContent = MHRN[view.m];
       document.getElementById("wcal-men").textContent = MEN[view.m];
       document.getElementById("wcal-year").textContent = view.y;
       var mb = document.querySelectorAll("#wcal-months button");
-      for (var k = 0; k < mb.length; k++) mb[k].classList.toggle("on", +mb[k].getAttribute("data-m") === view.m);
+      for (var k = 0; k < mb.length; k++) {
+        var on = +mb[k].getAttribute("data-m") === view.m;
+        mb[k].classList.toggle("on", on);
+        mb[k].setAttribute("aria-pressed", on ? "true" : "false");
+      }
+    }
+    function focusDay(n) {
+      var b = grid && grid.querySelector('button[data-d="' + n + '"]');
+      if (b) b.focus();
     }
     function pick(date) {
       cur = new Date(date.getTime());
       var key = show(cur);
-      view = { y: cur.getFullYear(), m: cur.getMonth() };
+      view = { y: cur.getFullYear(), m: cur.getMonth(), f: cur.getDate() };
       drawMonth();
       if (grid && window.history && history.replaceState) history.replaceState(null, "", "#d-" + key);
     }
     if (grid) {
-      grid.addEventListener("click", function (e) {
+      grid.addEventListener("click", function (e) {      // also Enter / Space: the days are real buttons
         var b = e.target.closest("button[data-d]");
-        if (b) pick(new Date(view.y, view.m, +b.getAttribute("data-d")));
+        if (!b) return;
+        var n = +b.getAttribute("data-d");
+        pick(new Date(view.y, view.m, n));
+        focusDay(n);                                        // the grid was redrawn: keep focus on the chosen day
       });
-      var mv = function (n) { view.m += n; if (view.m < 0) { view.m = 11; view.y--; } if (view.m > 11) { view.m = 0; view.y++; } drawMonth(); };
+      grid.addEventListener("keydown", function (e) {
+        var b = e.target.closest("button[data-d]");
+        if (!b) return;
+        var n = +b.getAttribute("data-d"), wd = (new Date(view.y, view.m, n).getDay() + 6) % 7;
+        var delta = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7, Home: -wd, End: 6 - wd }[e.key];
+        var t;
+        if (delta !== undefined) t = new Date(view.y, view.m, n + delta);
+        else if (e.key === "PageUp" || e.key === "PageDown") {
+          t = new Date(view.y, view.m + (e.key === "PageUp" ? -1 : 1), 1);
+          t.setDate(Math.min(n, new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate()));
+        } else return;
+        e.preventDefault();
+        var redraw = t.getFullYear() !== view.y || t.getMonth() !== view.m;
+        view.y = t.getFullYear(); view.m = t.getMonth(); view.f = t.getDate();
+        if (redraw) drawMonth();
+        else {
+          var bs = grid.querySelectorAll("button[data-d]");
+          for (var i = 0; i < bs.length; i++) bs[i].tabIndex = +bs[i].getAttribute("data-d") === view.f ? 0 : -1;
+        }
+        focusDay(view.f);
+      });
+      var mv = function (n) { view.m += n; view.f = 0; if (view.m < 0) { view.m = 11; view.y--; } if (view.m > 11) { view.m = 0; view.y++; } drawMonth(); };
       document.getElementById("wcal-prev").addEventListener("click", function () { mv(-1); });
       document.getElementById("wcal-next").addEventListener("click", function () { mv(1); });
       document.getElementById("wcal-months").addEventListener("click", function (e) {
         var b = e.target.closest("button[data-m]");
-        if (b) { view.m = +b.getAttribute("data-m"); drawMonth(); }
+        if (b) { view.m = +b.getAttribute("data-m"); view.f = 0; drawMonth(); }
       });
     }
     pick(cur);
+    if (grid) {      // from now on, announce the chosen day and its thought (set after the first fill, so the page load is quiet)
+      var live = [document.getElementById("qday"), box.querySelector(".m"), document.querySelector(".wcal-title")];
+      for (var li = 0; li < live.length; li++) if (live[li]) live[li].setAttribute("aria-live", "polite");
+    }
     var step = function (n) { var t = new Date(cur.getTime()); t.setDate(t.getDate() + n); pick(t); };
     var bind = function (id, fn) { var b = document.getElementById(id); if (b) b.addEventListener("click", fn); };
     bind("qprev", function () { step(-1); });
@@ -178,17 +227,20 @@
     });
   }
 
-  /* ---- YouTube: load the player only when asked ---- */
+  /* ---- YouTube: load the player only when asked (nothing is fetched from YouTube before the click) ---- */
   document.addEventListener("click", function (e) {
     var b = e.target.closest("button.yt");
-    if (!b || b.classList.contains("on")) return;
+    if (!b) return;
     var id = b.getAttribute("data-id");
+    var wrap = document.createElement("div");       // the player replaces the button: no iframe inside a <button>
+    wrap.className = "yt yt-player";
     var f = document.createElement("iframe");
-    f.src = "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1";
-    f.title = b.getAttribute("aria-label") || "YouTube";
-    f.allow = "autoplay; encrypted-media; picture-in-picture";
+    f.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(id) + "?autoplay=1";
+    f.title = (b.getAttribute("data-title") || "YouTube") + " (YouTube)";
+    f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
     f.allowFullscreen = true;
-    b.classList.add("on");
-    b.appendChild(f);
+    wrap.appendChild(f);
+    b.parentNode.replaceChild(wrap, b);
+    f.focus();                                      // keyboard users land on the player they asked for
   });
 })();

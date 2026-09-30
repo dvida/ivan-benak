@@ -245,7 +245,7 @@ table.index .letter td { border-bottom: 1px solid var(--rule); font-style: norma
   aspect-ratio: 4 / 3;
   display: flex; align-items: center; justify-content: center;
 }
-.gallery img { max-width: 100%; max-height: 100%; display: block; }
+.gallery img { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; }
 .gallery .cap { text-align: left; }
 .big { text-align: center; }
 .big img { max-width: 100%; height: auto; border: 1px solid var(--rule); padding: 6px; background: #fff; }
@@ -274,8 +274,10 @@ table.index .letter td { border-bottom: 1px solid var(--rule); font-style: norma
   background: rgba(0,0,0,.18);
 }
 .yt:hover::after { background: rgba(0,0,0,.05); }
+.yt img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.yt-player { cursor: auto; border-style: inset; }
+.yt-player::after { display: none; }
 .yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.yt.on::after { display: none; }
 .song-credits { font-size: 15px; color: var(--ink-soft); }
 
 /* ---------- footer ---------- */
@@ -399,7 +401,32 @@ table.index .letter td { border-bottom: 1px solid var(--rule); font-style: norma
 .ptip .tip-s { margin-top: 4px; color: var(--ink-soft); }
 .plegend { display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: center; font-size: 13.5px; margin-bottom: 10px; }
 .plegend i { color: var(--ink-soft); }
+.pcount { text-align: center; font-size: 14.5px; margin: 12px 0 0; }
+.pcount:empty { display: none; }
+.pmore-p { text-align: center; margin: 14px 0 6px; }
+.pmore-p .pmore {
+  font: inherit; font-size: 15px; padding: 4px 14px; cursor: pointer; color: var(--ink);
+  background: var(--paper); border: 2px outset var(--bevel-hi);
+  border-right-color: var(--bevel-lo); border-bottom-color: var(--bevel-lo);
+}
+.pmore-p .pmore:active { border-style: inset; }
+.pmore-p .pleft { font-size: 13.5px; color: var(--ink-soft); }
+#pmap .regions .reg-b { pointer-events: auto; cursor: pointer; }
+#pmap .reg-b:hover .reg, #pmap .reg-b.on .reg { fill: var(--link); }
+#pmap .reg-b:focus { outline: none; }
+#pmap .reg-b:focus-visible .reg { fill: var(--link); text-decoration: underline; }
+#pmap.searching .reg-b.on .reg { opacity: 1; }
+.ptip.tap { pointer-events: auto; }
+.ptip .tip-go { display: inline-block; margin-top: 6px; padding: 4px 0; font-weight: bold; }
+.pregion { margin: 4px 0 12px; padding: 6px 12px 8px; background: var(--paper-2); border: 1px solid var(--rule); }
+.pregion-h { margin: 2px 0 6px; font-size: 15px; }
+.pregion-x { float: right; font: inherit; font-size: 13.5px; padding: 1px 9px; cursor: pointer; color: var(--ink);
+  background: var(--paper); border: 2px outset var(--bevel-hi); border-right-color: var(--bevel-lo); border-bottom-color: var(--bevel-lo); }
+.pregion ul { list-style: none; margin: 0; padding: 0; columns: 2 300px; column-gap: 24px; font-size: 14.5px; line-height: 1.5; }
+.pregion li { break-inside: avoid; padding: 1px 0; }
+.pregion li i { color: var(--ink-soft); font-size: 13px; }
 @media (max-width: 760px) {
+  .pregion li { padding: 5px 0; }
   .pbox input { font-size: 16px; }
   #pmap .reg { font-size: 26px; }
   #pmap .reg-en { font-size: 20px; }
@@ -452,7 +479,7 @@ table.index .letter td { border-bottom: 1px solid var(--rule); font-style: norma
 }
 .wcal-day:hover { background: var(--hi); border-color: var(--bevel-lo); }
 .wcal-day.sun { color: var(--red); }
-.wcal-day.now { outline: 2px solid var(--link); outline-offset: -3px; }
+.wcal-day.now { box-shadow: inset 0 0 0 2px var(--link); }
 .wcal-day.sel { background: var(--ink); color: #fff; border-color: var(--ink); }
 .wcal-day .mark { position: absolute; left: 50%; bottom: 5px; width: 6px; height: 6px; margin-left: -3px; background: var(--red); transform: rotate(45deg); }
 .wcal-day.sel .mark { background: #f0b3b5; }
@@ -515,17 +542,18 @@ table.index .letter td { border-bottom: 1px solid var(--rule); font-style: norma
 .ng ul { gap: 4px; }
 .ng a { padding: 2px 7px 3px; font-size: 14px; }
 .ng-home { min-width: 84px; padding: 4px 8px; font-size: 14.5px; }
+/* phones: the menu folds behind a button only when JS is running (html.js, set in <head>) */
 .nav-toggle { display: none; }
 @media (max-width: 760px) {
-  .nav-toggle {
+  .js .nav-toggle {
     display: block; width: calc(100% - 16px); margin: 6px 8px; padding: 6px; font: inherit; font-size: 16px;
     color: var(--ink); cursor: pointer; background: var(--paper);
     border: 2px outset var(--bevel-hi); border-right-color: var(--bevel-lo); border-bottom-color: var(--bevel-lo);
   }
   .nav-toggle i { color: var(--ink-soft); font-size: 14px; }
-  .nav2 { display: none; }
-  body.nav-open .nav2 { display: flex; }
-  body.nav-open .nav-toggle { border-style: inset; }
+  .js .nav2 { display: none; }
+  .js body.nav-open .nav2 { display: flex; }
+  .js body.nav-open .nav-toggle { border-style: inset; }
 }
 
 /* ---------- his birthday (29 July): a festive frame around the thought of the day ---------- */
@@ -562,7 +590,7 @@ table.index .letter td { border-bottom: 1px solid var(--rule); font-style: norma
 
 /* ---------- easter eggs ---------- */
 .phone { cursor: pointer; border-radius: 2px; }
-.phone:hover, .phone:focus { background: #fff0b8; outline: none; }
+.phone:hover, .phone:focus { background: #fff0b8; }
 .phone.ringing { animation: ring-shake .09s linear infinite; display: inline-block; background: #ffe08a; }
 @keyframes ring-shake { 0% { transform: translateX(-1px) rotate(-1deg); } 50% { transform: translateX(1px) rotate(1deg); } 100% { transform: translateX(-1px); } }
 
@@ -674,19 +702,55 @@ body.tm-on { overflow: hidden; }
 .langsw button[aria-pressed="true"] small { color: #f3d6d6; }
 
 /* one language only: a single, centred reading column */
-body.show-hr .m, body.show-en .m, body.show-hr .lang-bar, body.show-en .lang-bar { grid-template-columns: 1fr; }
-body.show-hr .m > .en, body.show-hr .lang-bar span + span { display: none; }
-body.show-en .m > .hr, body.show-en .lang-bar span:first-child { display: none; }
-body.show-hr .m > div, body.show-en .m > div { border-left: 0; border-top: 0; max-width: 720px; margin: 0 auto; width: 100%; }
-body.show-hr .lang-bar span, body.show-en .lang-bar span { max-width: 720px; margin: 0 auto; width: 100%; border: 0 !important; }
-body.show-en .poem .m.stanza > .en, body.show-hr .poem .m.stanza > .hr { padding-left: 18px; }
+html.show-hr .m, html.show-en .m, html.show-hr .lang-bar, html.show-en .lang-bar { grid-template-columns: 1fr; }
+html.show-hr .m > .en, html.show-hr .lang-bar span + span { display: none; }
+html.show-en .m > .hr, html.show-en .lang-bar span:first-child { display: none; }
+html.show-hr .m > div, html.show-en .m > div { border-left: 0; border-top: 0; max-width: 720px; margin: 0 auto; width: 100%; }
+html.show-hr .lang-bar span, html.show-en .lang-bar span { max-width: 720px; margin: 0 auto; width: 100%; border: 0 !important; }
+html.show-en .poem .m.stanza > .en, html.show-hr .poem .m.stanza > .hr { padding-left: 18px; }
 /* mixed-language small print follows the switch too */
-body.show-hr .foot [lang="en"], body.show-hr .nav2 small, body.show-hr .ng-label i { display: none; }
+html.show-hr .foot [lang="en"], html.show-hr .nav2 small, html.show-hr .ng-label i { display: none; }
 
 @media (max-width: 760px) {
   .topbar { justify-content: center; padding: 5px 6px; }
   .langsw { width: 100%; }
   .langsw-label { display: none; }
   .langsw button { flex: 1; }
-  body.show-both .m > .en { color: var(--ink-soft); border-top: 1px dotted var(--rule); }
+  html.show-both .m > .en { color: var(--ink-soft); border-top: 1px dotted var(--rule); }
+}
+
+/* ---------- keyboard focus: one clear, period-friendly ring everywhere ---------- */
+:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+a:focus-visible { outline-style: dotted; outline-width: 2px; background: var(--hi); border-radius: 1px; }
+.ng a:focus-visible, .ng-home:focus-visible, .langsw button:focus-visible, .nav-toggle:focus-visible,
+.qnav button:focus-visible, .wcal-months button:focus-visible, .yt:focus-visible, .w95-bar button:focus-visible {
+  outline: 2px solid var(--link); outline-offset: 2px;
+}
+.langsw button[aria-pressed="true"]:focus-visible, .wcal-months button.on:focus-visible { outline-color: var(--ink); }
+.wcal-day:focus-visible { outline: 3px solid var(--red); outline-offset: 1px; z-index: 1; }
+.wcal-day.sel:focus-visible { outline-color: var(--red); box-shadow: inset 0 0 0 2px #fff; }
+.wcal-nav:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.phone:focus-visible { outline: 2px dotted var(--red); outline-offset: 2px; }
+.yt:focus-visible { outline-width: 3px; outline-offset: 3px; }
+.w95:focus-visible, .kitty-say:focus-visible { outline: 2px dotted #000080; outline-offset: 2px; }
+#tm2003:focus-visible { outline: 3px dotted #000080; outline-offset: -3px; }
+#tm2003 .tm-back:focus-visible, #tm2003 a:focus-visible { outline: 2px dotted #000080; outline-offset: 2px; background: transparent; }
+#tm2003 .tm-back:focus-visible { background: #9b2226; }
+/* dialogs focused programmatically to announce them: no ring for mouse users */
+.w95:focus:not(:focus-visible), #tm2003:focus:not(:focus-visible), .kitty-say:focus:not(:focus-visible) { outline: none; }
+
+/* ---------- reduced motion: no shaking, falling, walking, scrolling or fading ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important;
+    transition-duration: .01ms !important; transition-delay: 0s !important; scroll-behavior: auto !important;
+  }
+  .phone.ringing, .tm-marquee span { animation: none !important; }
+}
+
+/* one-line headings inside a poem: salutations, speakers, section titles */
+.poem .m.stanza.subhead > div { padding-top: 12px; padding-bottom: 2px; }
+.poem .m.stanza.subhead .l { font-variant: small-caps; letter-spacing: .06em; font-weight: bold; color: var(--red); text-indent: 0; padding-left: 0; text-transform: lowercase; }
+@media (max-width: 760px) {           /* stacked: a name like BALTAZAR needs saying only once */
+  html.show-both .poem .m.stanza.subhead.same > .en { display: none; }
 }

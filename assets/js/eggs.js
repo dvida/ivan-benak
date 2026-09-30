@@ -21,22 +21,35 @@
     try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; }
     return ac;
   }
-  function ring(times) {           // an old European phone: 425 Hz, one second on, a pause
+  var bellBuf = null;
+  function bell(a) {               // an old rotary-dial phone: a clapper hammering two metal gongs, ~25 strikes a second
+    if (bellBuf) return bellBuf;
+    var sr = a.sampleRate, on = 1.2, n = Math.floor(sr * (on + 0.6)), buf = a.createBuffer(1, n, sr), d = buf.getChannelData(0);
+    var gongs = [1900, 2250], partials = [[1, 1], [2.32, 0.55], [4.25, 0.3], [6.63, 0.15]];   // inharmonic, like a struck bowl
+    for (var k = 0; k * 0.04 < on; k++) {
+      var s0 = Math.floor(k * 0.04 * sr), f0 = gongs[k % 2], hit = 0.8 + 0.2 * Math.random(), len = Math.floor(sr * 0.5);
+      for (var j = 0; j < len && s0 + j < n; j++) {
+        var t = j / sr, v = 0;
+        for (var p = 0; p < partials.length; p++)
+          v += partials[p][1] * Math.exp(-t * (6 + 9 * p)) * Math.sin(2 * Math.PI * f0 * partials[p][0] * t);
+        if (j < sr * 0.002) v += (Math.random() * 2 - 1) * 0.6 * (1 - j / (sr * 0.002));   // the clapper's click
+        d[s0 + j] += v * hit;
+      }
+    }
+    var sum = 0;
+    for (var i = 0; i < n; i++) sum += d[i] * d[i];
+    var scale = 0.2 / Math.sqrt(sum / Math.floor(sr * on));   // same loudness whatever the sample rate
+    for (i = 0; i < n; i++) d[i] = Math.max(-0.9, Math.min(0.9, d[i] * scale));
+    return (bellBuf = buf);
+  }
+  function ring(times) {           // one long ring, a pause, and again
     var a = audio();
     if (!a) return;
+    var b = bell(a);
     for (var i = 0; i < times; i++) {
-      var t0 = a.currentTime + i * 2.2;
-      [425, 450].forEach(function (f) {
-        var o = a.createOscillator(), g = a.createGain(), lfo = a.createOscillator(), lg = a.createGain();
-        o.frequency.value = f; o.type = "square";
-        lfo.frequency.value = 20; lg.gain.value = 0.5; lfo.connect(lg); lg.connect(g.gain);   // the bell's trill
-        g.gain.setValueAtTime(0.0001, t0);
-        g.gain.linearRampToValueAtTime(0.035, t0 + 0.02);
-        g.gain.setValueAtTime(0.035, t0 + 1.0);
-        g.gain.linearRampToValueAtTime(0.0001, t0 + 1.05);
-        o.connect(g); g.connect(a.destination);
-        o.start(t0); lfo.start(t0); o.stop(t0 + 1.1); lfo.stop(t0 + 1.1);
-      });
+      var src = a.createBufferSource();
+      src.buffer = b; src.connect(a.destination);
+      src.start(a.currentTime + i * 2.6);
     }
   }
   function purr(sec) {             // brown noise, low-passed, fluttering at ~24 Hz
@@ -50,20 +63,44 @@
       d[i] = last * 9 * flutter * (0.35 + 0.65 * breath);
     }
     var src = a.createBufferSource(), lp = a.createBiquadFilter(), g = a.createGain();
-    src.buffer = buf; lp.type = "lowpass"; lp.frequency.value = 380; g.gain.value = 0.9;
+    src.buffer = buf; lp.type = "lowpass"; lp.frequency.value = 380; g.gain.value = 0.45;
     src.connect(lp); lp.connect(g); g.connect(a.destination);
     src.start();
   }
+
+  /* ---------- dialogs: focus moves in, Esc closes the newest one, focus goes back where it was ---------- */
+  var stack = [];
+  function openDialog(el, label, onClose, noFocus) {
+    var back = document.activeElement;
+    el.setAttribute("role", "dialog");
+    el.setAttribute("aria-label", label);
+    el.tabIndex = -1;
+    var d = { el: el, close: null };
+    d.close = function () {
+      var i = stack.indexOf(d);
+      if (i < 0) return;
+      stack.splice(i, 1);
+      var hadFocus = el.contains(document.activeElement);
+      if (onClose) onClose(); else el.remove();
+      if ((hadFocus || !noFocus) && back && back !== document.body && document.contains(back) && back.focus) back.focus();
+    };
+    stack.push(d);
+    if (!noFocus) el.focus({ preventScroll: true });
+    return d;
+  }
+  document.addEventListener("keydown", function (e) {
+    if ((e.key === "Escape" || e.key === "Esc") && stack.length) { e.preventDefault(); stack[stack.length - 1].close(); }
+  });
 
   /* ---------- a little Windows-95-ish window ---------- */
   function win(title, html, cls) {
     var w = document.createElement("div");
     w.className = "w95 " + (cls || "");
-    w.setAttribute("role", "dialog");
     w.innerHTML = '<div class="w95-bar"><span>' + esc(title) + '</span><button type="button" aria-label="Zatvori / Close">&#10005;</button></div>' +
       '<div class="w95-body">' + html + "</div>";
-    w.querySelector(".w95-bar button").addEventListener("click", function () { w.remove(); });
     document.body.appendChild(w);
+    var d = openDialog(w, title);
+    w.querySelector(".w95-bar button").addEventListener("click", d.close);
     return w;
   }
   function excerpt(x) {
@@ -96,9 +133,14 @@
       '<p class="tm-small">Najbolje pregledavati u Internet Exploreru 5.0 pri razlučivosti 800×600 · free-os.htnet.hr/benak</p>';
     document.body.appendChild(t);
     document.body.classList.add("tm-on");
-    var close = function () { t.remove(); document.body.classList.remove("tm-on"); };
-    t.querySelector(".tm-back").addEventListener("click", close);
-    document.addEventListener("keydown", function k(e) { if (e.key === "Escape") { close(); document.removeEventListener("keydown", k); } });
+    var pg = document.querySelector(".page");
+    if (pg) pg.inert = true;                     // modal: Tab stays in 2003
+    t.setAttribute("aria-modal", "true");
+    var d = openDialog(t, "Stranica iz 2003. · The site in 2003", function () {
+      t.remove(); document.body.classList.remove("tm-on");
+      if (pg) pg.inert = false;
+    });
+    t.querySelector(".tm-back").addEventListener("click", d.close);
   }
 
   /* ---------- 2. the kitten ---------- */
@@ -114,7 +156,7 @@
     '<path d="M88 39 L92 39 L90 41.5 Z" fill="#e8959b"/>' +
     '<path d="M86 43 Q90 46 94 43" fill="none" stroke="#2b2118" stroke-width="1.2"/>' +
     '<g stroke="#2b2118" stroke-width=".9"><line x1="80" y1="40" x2="66" y2="37"/><line x1="80" y1="42" x2="66" y2="44"/><line x1="100" y1="40" x2="114" y2="37"/><line x1="100" y1="42" x2="114" y2="44"/></g></svg>';
-  function kitten() {
+  function kitten(focusIt) {     // focusIt: only when summoned from the keyboard, never from the search box
     if (document.querySelector(".kitty")) return;
     var k = document.createElement("div");
     k.className = "kitty walking" + (calm ? " calm" : "");
@@ -123,7 +165,19 @@
     var stopAt = Math.max(20, Math.min(window.innerWidth * 0.55, window.innerWidth - 360));
     k.style.left = (calm ? stopAt : -130) + "px";
     requestAnimationFrame(function () { k.style.left = stopAt + "px"; });
+    var gone = false;
+    var leave = function () {        // the bubble closes and the kitten walks off (also on Esc)
+      if (gone) return;
+      gone = true;
+      var s = k.querySelector(".kitty-say");
+      if (s) s.remove();
+      k.classList.add("walking");
+      k.style.left = (window.innerWidth + 140) + "px";
+      setTimeout(function () { k.remove(); }, calm ? 10 : 4200);
+    };
+    var dk = openDialog(k, "Mače · The kitten", leave, true);   // Esc sends it away even while it walks in
     setTimeout(function () {
+      if (gone) return;
       k.classList.remove("walking");
       purr(3.2);
       if (E.mace) {
@@ -131,15 +185,11 @@
         b.className = "kitty-say";
         b.innerHTML = "<p>" + E.mace.hr.map(esc).join("<br>") + '</p><p lang="en"><i>' + E.mace.en.map(esc).join("<br>") + "</i></p>" +
           '<a href="' + ROOT + 'pjesme/zaspalo-mace.html">— Zaspalo mače</a>';
+        b.tabIndex = -1;
         k.appendChild(b);
+        if (focusIt) b.focus({ preventScroll: true });
       }
-      setTimeout(function () {
-        var s = k.querySelector(".kitty-say");
-        if (s) s.remove();
-        k.classList.add("walking");
-        k.style.left = (window.innerWidth + 140) + "px";
-        setTimeout(function () { k.remove(); }, calm ? 10 : 4200);
-      }, 7000);
+      setTimeout(dk.close, 7000);
     }, calm ? 50 : 4000);
   }
 
@@ -190,7 +240,7 @@
     if (!e.key || e.key.length !== 1) return;
     typed = (typed + e.key.toLowerCase()).slice(-8);
     if (/poeta$/.test(typed)) { typed = ""; timeMachine(); }
-    else if (/maca$/.test(typed)) { typed = ""; kitten(); }
+    else if (/maca$/.test(typed)) { typed = ""; kitten(true); }
   });
   function clicks(el, need, within, fn) {
     if (!el) return;
