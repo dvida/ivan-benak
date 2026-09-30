@@ -98,8 +98,10 @@
       }
       box.querySelector(".hr blockquote").innerHTML = q.hr.map(esc).join("<br>");
       box.querySelector(".en blockquote").innerHTML = q.en.map(esc).join("<br>");
-      box.querySelector(".hr .src").innerHTML = "— iz pjesme <a href=\"" + href + "\">" + esc(q.title_hr) + "</a>";
-      box.querySelector(".en .src").innerHTML = "— from <a href=\"" + href + "\">" + esc(q.title_en) + "</a>";
+      box.querySelector(".hr .src").innerHTML = "— iz pjesme <a href=\"" + href + "\">" + esc(q.title_hr) + "</a>" +
+        (q.sig_hr ? '<span class="qsig">' + esc(q.sig_hr) + "</span>" : "");
+      box.querySelector(".en .src").innerHTML = "— from <a href=\"" + href + "\">" + esc(q.title_en) + "</a>" +
+        (q.sig_en ? '<span class="qsig">' + esc(q.sig_en) + "</span>" : "");
       var lab = document.getElementById("qday");
       if (lab) lab.textContent = "· " + date.getDate() + ". " + MHR[date.getMonth()] + " · " + MEN[date.getMonth()] + " " + date.getDate() +
         (q.occ_hr ? " · " + q.occ_hr + (q.occ_en && q.occ_en !== q.occ_hr ? " / " + q.occ_en : "") : "");
@@ -167,6 +169,10 @@
     bind("qprev", function () { step(-1); });
     bind("qnext", function () { step(1); });
     bind("qtoday", function () { pick(new Date()); });
+    window.addEventListener("hashchange", function () {   // links like misao-dana.html#d-09-21
+      var hh = /^#d-(\d{2})-(\d{2})$/.exec(window.location.hash);
+      if (hh) pick(new Date(cur.getFullYear(), +hh[1] - 1, +hh[2]));
+    });
   }
 
   /* ---- YouTube: load the player only when asked ---- */

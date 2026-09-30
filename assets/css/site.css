@@ -667,3 +667,4 @@ body.tm-on { overflow: hidden; }
 .tm-verse { font-size: 16px; line-height: 1.5; margin: 0 auto; }
 .tm-by { font-size: 11px; color: #333; margin-top: 18px; font-style: italic; }
 .tm-small { font-size: 11px; color: #334; }
+.qotd .qsig { display: block; margin-top: 3px; font-style: italic; }
