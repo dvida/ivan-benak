@@ -418,6 +418,8 @@ html.show-both .foot .lbl span[lang="en"]::before, html.show-both .foot-bottom >
 #pmap .dot.dim { opacity: .13; }
 #pmap .dot.hit { stroke: var(--ink); stroke-width: 1.6; opacity: 1; }
 #pmap .regions { pointer-events: none; }
+/* each category's area (finder.py layout_areas): a faint tint of its colour behind its dots */
+#pmap .area { fill-opacity: .07; stroke-opacity: .28; stroke-width: 1; vector-effect: non-scaling-stroke; pointer-events: none; }
 #pmap .reg {
   font: italic bold 20px Georgia, serif; fill: #4a3b2c; letter-spacing: .02em;
   paint-order: stroke; stroke: #fffdf4; stroke-width: 6px; stroke-linejoin: round;
@@ -448,24 +450,13 @@ html.show-both .foot .lbl span[lang="en"]::before, html.show-both .foot-bottom >
 #pmap.searching .reg-b.on .reg { opacity: 1; }
 .ptip.tap { pointer-events: auto; }
 .ptip .tip-go { display: inline-block; margin-top: 6px; padding: 4px 0; font-weight: bold; }
-.pregion { margin: 4px 0 12px; padding: 6px 12px 8px; background: var(--paper-2); border: 1px solid var(--rule); }
-.pregion-h { margin: 2px 0 6px; font-size: 15px; }
-.pregion-x { float: right; font: inherit; font-size: 13.5px; padding: 1px 9px; cursor: pointer; color: var(--ink);
-  background: var(--paper); border: 2px outset var(--bevel-hi); border-right-color: var(--bevel-lo); border-bottom-color: var(--bevel-lo); }
-.pregion ul { list-style: none; margin: 0; padding: 0; columns: 2 300px; column-gap: 24px; font-size: 14.5px; line-height: 1.5; }
-.pregion li { break-inside: avoid; padding: 1px 0; }
-.pregion li i { color: var(--ink-soft); font-size: 13px; }
 @media (max-width: 760px) {
-  .pregion li { padding: 5px 0; }
   .pbox input { font-size: 16px; }
   #pmap .reg { font-size: 26px; }
   #pmap .reg-en { font-size: 20px; }
 }
 /* the map zoomed in on one category (finder.js zoomTo). Texts inside the map are sized in screen pixels times
    --u (map units per pixel, set by finder.js), so they keep their size at every zoom. */
-.plegend .pleg { display: inline-flex; align-items: center; }
-.plegend .pcb { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; min-height: 26px; cursor: pointer; }
-.plegend .pcb input { margin: 0; cursor: pointer; }
 .plegend .pzb {
   font: inherit; color: var(--ink); background: none; border: 1px solid transparent; padding: 2px 4px; min-height: 26px; cursor: pointer;
   text-decoration: underline dotted #a8987a; text-underline-offset: 3px;
@@ -497,7 +488,7 @@ html.show-en .pz-list a i { font-style: normal; color: inherit; }
   flex: none; width: 20px; height: 20px; line-height: 18px; text-align: center; box-sizing: border-box; border: 1px solid var(--ink);
   border-radius: 50%; background: #fffaf0; color: var(--ink); font-size: 12px; font-weight: bold;
 }
-#pmap.zoomed .regions { display: none; }
+#pmap.zoomed .regions, #pmap.zoomed .areas { display: none; }
 #pmap.zoomed .dot { vector-effect: non-scaling-stroke; }
 #pmap.zooming .dot { transition: none; }
 #pmap .dot.off { display: none; }        /* zoomed in: only the poems of that category */
@@ -506,14 +497,13 @@ html.show-en .pz-list a i { font-style: normal; color: inherit; }
 #pmap .dot.co-on { stroke-width: 2.6; }
 #pmap .subs, #pmap .callouts { animation: pz-in .35s ease-out; }
 @keyframes pz-in { from { opacity: 0; } }
+/* theme hints inside a zoomed category: small, italic, muted words, not categories and not controls */
+#pmap .subs { pointer-events: none; }
 #pmap .sub {
-  font: italic 13px Georgia, serif; font-size: calc(13px * var(--u, 1)); fill: #5b4a39; letter-spacing: .02em;
-  paint-order: stroke; stroke: #fffdf4; stroke-width: calc(4px * var(--u, 1)); stroke-linejoin: round;
+  font: italic 11.5px Georgia, serif; font-size: calc(11.5px * var(--u, 1)); fill: #8a7a66; letter-spacing: .03em;
+  paint-order: stroke; stroke: #fffdf4; stroke-width: calc(3px * var(--u, 1)); stroke-linejoin: round;
 }
-#pmap.compact .sub { font-size: calc(11.5px * var(--u, 1)); stroke-width: calc(3px * var(--u, 1)); }
-#pmap .sub-b { cursor: pointer; }
-#pmap .sub-b:focus { outline: none; }
-#pmap .sub-b:hover .sub, #pmap .sub-b.on .sub, #pmap .sub-b:focus-visible .sub { fill: var(--link); text-decoration: underline; }
+#pmap.compact .sub { font-size: calc(10.5px * var(--u, 1)); }
 #pmap .co-line { stroke: #8a7a66; stroke-width: 1; vector-effect: non-scaling-stroke; fill: none; }
 #pmap .co-t {
   font-family: Georgia, serif; paint-order: stroke; stroke: #fffdf4; stroke-width: calc(3.5px * var(--u, 1)); stroke-linejoin: round;

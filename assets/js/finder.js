@@ -85,8 +85,8 @@
       for (var j = 0; j < r[9].length; j += 2) m[F.lex[r[9][j]].id] = r[9][j + 1];
       return {
         s: r[0] || slug(r[2]), c: F.cats[r[1]], th: r[2], te: r[3], sh: r[4], se: r[5], l1: lines(r[6]), l2: lines(r[7]),
-        a: F.aud[r[8]], m: m, t: r[10].map(function (j) { return F.lex[j].id; }), p: [r[11] / 1e4, r[12] / 1e4], r: r[13],
-        su: r[14]
+        a: F.aud[r[8]], m: m, t: r[10].map(function (j) { return F.lex[j].id; }), p: [r[11] / 1e4, r[12] / 1e4],
+        su: r[13]
       };
     });
   }
@@ -218,16 +218,27 @@
   }
   var K = 1, ZR = 1;        // ZR: zoomed in, dots shrink in map units but grow a little on screen (see setView)
   function radius(s) { var st = lit && lit[s]; return K * ZR * (st === 2 ? 7 : st ? 5 : 4.2); }
+  function count(c) { return F.items.filter(function (it) { return it.c === c; }).length; }
   function drawMap() {
     if (!svg) return;
     svg.setAttribute("role", "group");     // not "img": the poems inside must stay reachable
     K = kScale();
+    // each category has its own area (tools/finder.py layout_areas): a tinted box behind its dots
+    var areas = document.createElementNS(ns, "g");
+    areas.setAttribute("class", "areas");
+    areas.setAttribute("aria-hidden", "true");
+    F.areas.forEach(function (ar) {
+      var a = px([ar.b[0] / 1e4, ar.b[1] / 1e4]), b = px([ar.b[2] / 1e4, ar.b[3] / 1e4]);
+      areas.appendChild(el("rect", { "class": "area", "data-c": ar.c, x: a[0], y: a[1], width: b[0] - a[0], height: b[1] - a[1],
+        rx: 6, fill: (CAT[ar.c] || ["#888"])[0], stroke: (CAT[ar.c] || ["#888"])[0] }));
+    });
+    svg.appendChild(areas);
     var g = document.createElementNS(ns, "g");
     g.setAttribute("class", "dots");
     F.items.forEach(function (it) {
       var xy = px(it.p), a = document.createElementNS(ns, "a");
       a.setAttribute("href", "pjesme/" + it.s + ".html");
-      a.setAttribute("tabindex", "-1");     // keyboard: the region labels below lead to lists of these links
+      a.setAttribute("tabindex", "-1");     // keyboard: the category names lead to the zoomed view, its titles and its list
       langAttr(a, "aria-label", it.th, it.te);
       var c = document.createElementNS(ns, "circle");
       c.setAttribute("cx", xy[0]); c.setAttribute("cy", xy[1]); c.setAttribute("r", radius(it.s));
@@ -243,35 +254,28 @@
       dots[it.s] = c;
     });
     svg.appendChild(g);
-    var labels = document.createElementNS(ns, "g");   // drawn last, so the themes sit on top of the dots
+    // the categories' names, each in the top strip of its area: a button that zooms the map in on the category
+    var labels = document.createElementNS(ns, "g");
     labels.setAttribute("class", "regions");
-    F.regions.forEach(function (r, ri) {
-      var xy = px([r.x, r.y]);
+    F.areas.forEach(function (ar) {
+      var c = ar.c, n = count(c);
       var b = document.createElementNS(ns, "g");
       b.setAttribute("class", "reg-b");
       b.setAttribute("role", "button");
       b.setAttribute("tabindex", "0");
-      if (r.c && F.zoom && F.zoom[r.c]) {     // a region named after a category zooms in on that category
-        b.setAttribute("data-z", r.c);
-        langAttr(b, "aria-label", r.hr + ": približi skupinu " + CAT[r.c][1], r.en + ": zoom in on " + CAT[r.c][2],
-          r.hr + " / " + r.en + ": približi skupinu / zoom in on " + CAT[r.c][1] + " / " + CAT[r.c][2]);
-      } else {
-        b.setAttribute("aria-expanded", "false");
-        b.setAttribute("aria-controls", "pregion");
-        langAttr(b, "aria-label", r.hr + ": " + pjesme(r.n), r.en + ": " + r.n + " poems",
-          r.hr + " / " + r.en + ": " + pjesme(r.n) + " / " + r.n + " poems");
-      }
-      b.setAttribute("data-r", ri);
+      b.setAttribute("data-z", c);
+      langAttr(b, "aria-label", CAT[c][1] + " (" + pjesme(n) + "): približi na karti", CAT[c][2] + " (" + n + " poems): zoom the map in",
+        CAT[c][1] + " / " + CAT[c][2] + " (" + n + "): približi na karti / zoom the map in");
       var t = document.createElementNS(ns, "text");
-      t.setAttribute("x", xy[0]); t.setAttribute("y", xy[1]); t.setAttribute("class", "reg");
+      t.setAttribute("class", "reg");
       t.setAttribute("text-anchor", "middle");
       var t1 = document.createElementNS(ns, "tspan");       // the Croatian name, and the English under it
       t1.setAttribute("lang", "hr"); t1.setAttribute("class", "reg-hr");
-      t1.textContent = r.hr;
+      t1.textContent = CAT[c][1];
       t.appendChild(t1);
       var t2 = document.createElementNS(ns, "tspan");
-      t2.setAttribute("x", xy[0]); t2.setAttribute("dy", "1.15em"); t2.setAttribute("class", "reg-en"); t2.setAttribute("lang", "en");
-      t2.textContent = r.en;
+      t2.setAttribute("class", "reg-en"); t2.setAttribute("lang", "en");
+      t2.textContent = CAT[c][2];
       t.appendChild(t2);
       b.appendChild(t);
       labels.appendChild(b);
@@ -279,45 +283,38 @@
     svg.appendChild(labels);
     regLabels = labels;
     layoutLabels();
-    function regionGo(b, byKey) {
-      var z = b.getAttribute("data-z");
-      if (z) zoomTo(z, { push: true, byKey: byKey });
-      else toggleRegion(+b.getAttribute("data-r"), b, byKey);
-    }
     labels.addEventListener("click", function (e) {
       var b = e.target.closest && e.target.closest(".reg-b");
-      if (b) { e.stopPropagation(); regionGo(b, false); }
+      if (b) { e.stopPropagation(); zoomTo(b.getAttribute("data-z"), { push: true }); }
     });
     labels.addEventListener("keydown", function (e) {
       var b = e.target.closest && e.target.closest(".reg-b");
-      if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); regionGo(b, true); }
+      if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); zoomTo(b.getAttribute("data-z"), { push: true, byKey: true }); }
     });
     // touch: a tap selects the nearest poem within a finger's width and shows its card with a link
     svg.addEventListener("pointerdown", function (e) { touchy = e.pointerType === "touch" || e.pointerType === "pen"; });
     svg.addEventListener("click", function (e) {
-      if (!touchy || (e.target.closest && e.target.closest(".co, .sub-b"))) return;   // callout links and sub-labels act themselves
+      if (!touchy || (e.target.closest && e.target.closest(".co"))) return;   // the callout links act themselves
       e.preventDefault();
       var box = svg.getBoundingClientRect(), u = view.w / box.width;
       var x = view.x + (e.clientX - box.left) * u, y = view.y + (e.clientY - box.top) * u, best = null, bd = Math.pow(24 * u, 2);
       F.items.forEach(function (it) {
-        if (dots[it.s].style.display === "none" || (zoomCat && it.c !== zoomCat)) return;
+        if (zoomCat && it.c !== zoomCat) return;
         var xy = px(it.p), d = Math.pow(xy[0] - x, 2) + Math.pow(xy[1] - y, 2);
         if (d < bd) { bd = d; best = it; }
       });
       if (best) showTip(best, true); else hideTip();
     });
     var leg = document.getElementById("plegend");
-    // each category: a check box (show or hide its dots) and its name, a button that zooms the map in on it
+    // the key: each category's colour and name, a button that zooms the map in on it (again: back to the whole map)
     if (leg) leg.innerHTML = Object.keys(CAT).map(function (k) {
-      return '<span class="pleg"><label class="pcb"><input type="checkbox" checked data-cat="' + k + '"></label>' +
-        '<button type="button" class="pzb" data-zoom="' + k + '" aria-pressed="false"><span class="sw" style="background:' + CAT[k][0] + '"></span>' +
-        '<span lang="hr">' + esc(CAT[k][1]) + '</span> <i lang="en">' + esc(CAT[k][2]) + "</i></button></span>";
+      return '<button type="button" class="pzb" data-zoom="' + k + '" aria-pressed="false"><span class="sw" style="background:' + CAT[k][0] + '"></span>' +
+        '<span lang="hr">' + esc(CAT[k][1]) + '</span> <i lang="en">' + esc(CAT[k][2]) + "</i></button>";
     }).join("");
-    if (leg) Array.prototype.forEach.call(leg.querySelectorAll(".pleg"), function (el) {
-      var cb = el.querySelector("input"), k = cb.getAttribute("data-cat");
-      langAttr(cb, "aria-label", "Prikaži na karti: " + CAT[k][1], "Show on the map: " + CAT[k][2]);
-      langAttr(el.lastChild, "aria-label", "Približi na karti: " + CAT[k][1], "Zoom the map in on: " + CAT[k][2]);
-      langAttr(el.lastChild, "title", "Približi na karti", "Zoom the map in");
+    if (leg) Array.prototype.forEach.call(leg.querySelectorAll(".pzb"), function (b) {
+      var k = b.getAttribute("data-zoom");
+      langAttr(b, "aria-label", "Približi na karti: " + CAT[k][1], "Zoom the map in on: " + CAT[k][2]);
+      langAttr(b, "title", "Približi na karti", "Zoom the map in");
     });
     if (leg) leg.addEventListener("click", function (e) {
       var b = e.target.closest && e.target.closest(".pzb");
@@ -325,13 +322,6 @@
       var k = b.getAttribute("data-zoom");
       if (k === zoomCat) zoomOut({ byKey: e.detail === 0 });
       else zoomTo(k, { push: true, byKey: e.detail === 0, scroll: true });
-    });
-    if (leg) leg.addEventListener("change", function (e) {
-      var k = e.target.getAttribute("data-cat");
-      Object.keys(dots).forEach(function (s) {
-        if (dots[s].getAttribute("data-c") === k) dots[s].parentNode.style.display = dots[s].style.display = e.target.checked ? "" : "none";
-      });
-      if (!e.target.checked && k === zoomCat) zoomOut({});
     });
     var rt;
     window.addEventListener("resize", function () {
@@ -349,17 +339,34 @@
     });
   }
   var touchy = false, regLabels = null;
-  // keep every region label inside the map and clear of the others, measured as drawn (the font grows on phones)
+  // each category's name centred in the top strip of its area (finder.py keeps that strip, F.atop high, free of
+  // dots), measured as drawn (the font grows on phones) and made smaller where it would not fit the strip; kept
+  // inside the map and clear of the others
   function layoutLabels() {
     if (!regLabels) return;
-    var bs = Array.prototype.slice.call(regLabels.childNodes), pos = F.regions.map(function (r) { return px([r.x, r.y]); });
-    var en2 = mode() === "both";     // the English name sits under the Croatian only when both are shown
+    var bs = Array.prototype.slice.call(regLabels.childNodes), en2 = mode() === "both";   // English under the Croatian only in both-mode
+    var strip = F.atop / 1e4 * (H - 2 * PAD);
+    var box = F.areas.map(function (ar) {
+      var a = px([ar.b[0] / 1e4, ar.b[1] / 1e4]), b = px([ar.b[2] / 1e4, ar.b[3] / 1e4]);
+      return { x: (a[0] + b[0]) / 2, y: a[1], w: b[0] - a[0] };
+    });
+    var pos = box.map(function (q) { return [q.x, q.y]; }), ks = box.map(function () { return 1; });
     function place(i) {
-      var t = bs[i].firstChild;
-      t.setAttribute("x", pos[i][0]); t.setAttribute("y", pos[i][1]);
-      t.lastChild.setAttribute("x", pos[i][0]); t.lastChild.setAttribute("dy", en2 ? "1.15em" : "0");
+      var t = bs[i].firstChild, x = pos[i][0], y = pos[i][1];
+      t.setAttribute("x", x); t.setAttribute("y", y);
+      t.lastChild.setAttribute("x", x); t.lastChild.setAttribute("dy", en2 ? "1.15em" : "0");
+      if (ks[i] < 1) t.setAttribute("transform", "translate(" + x + " " + box[i].y + ") scale(" + ks[i] + ") translate(" + -x + " " + -box[i].y + ")");
+      else t.removeAttribute("transform");
     }
-    bs.forEach(function (b, i) { place(i); });
+    bs.forEach(function (b, i) {      // the top of the text a little under the top of its area
+      ks[i] = 1;
+      place(i);
+      var q = b.getBBox();
+      if (!q.height) return;
+      pos[i][1] += box[i].y + 5 - q.y;
+      ks[i] = Math.min(1, (box[i].w - 10) / q.width, (strip - 8) / q.height);
+      place(i);
+    });
     for (var it = 0; it < 300; it++) {
       var bx = bs.map(function (b) { return b.getBBox(); }), moved = false;
       bx.forEach(function (a, i) {
@@ -371,8 +378,8 @@
       for (var i = 0; i < bx.length; i++) for (var j = i + 1; j < bx.length; j++) {
         var a = bx[i], b = bx[j];
         if (a.x < b.x + b.width + 6 && b.x < a.x + a.width + 6 && a.y < b.y + b.height + 3 && b.y < a.y + a.height + 3) {
-          var up = a.y + a.height / 2 <= b.y + b.height / 2 ? i : j, dn = up === i ? j : i;
-          pos[up][1] -= 3; pos[dn][1] += 3; moved = true;
+          var lf = a.x + a.width / 2 <= b.x + b.width / 2 ? i : j, rg = lf === i ? j : i;
+          pos[lf][0] -= 3; pos[rg][0] += 3; moved = true;      // side by side in one row of areas: apart sideways
         }
       }
       bs.forEach(function (b, i) { place(i); });
@@ -413,62 +420,12 @@
     });
   }
 
-  /* region lists: the keyboard and screen-reader way into the map */
-  var panel = null, openR = null, openBtn = null, Q = /^[„“”"'«»(\s]+/;
-  function toggleRegion(ri, btn, byKey) {
-    openList("r" + ri, btn, byKey, F.regions[ri], F.items.filter(function (it) { return it.r === ri; }));
-  }
-  // the panel under the map listing the poems of a region (or, zoomed in, of a sub-group); r = its {hr, en} name
-  function openList(key, btn, byKey, r, its) {
-    if (!panel) {
-      panel = document.createElement("div");
-      panel.id = "pregion";
-      panel.className = "pregion";
-      panel.hidden = true;
-      var wrap = svg.parentNode;
-      wrap.parentNode.insertBefore(panel, wrap.nextSibling);
-      panel.addEventListener("click", function (e) {
-        if (e.target.closest(".pregion-x")) closeRegion(true);
-      });
-      panel.addEventListener("keydown", function (e) { if (e.key === "Escape") closeRegion(true); });
-    }
-    var was = openR;
-    hideTip();
-    closeRegion(false);
-    if (was === key) { if (byKey) btn.focus(); return; }
-    openR = key; openBtn = btn;
-    btn.setAttribute("aria-expanded", "true");
-    btn.classList.add("on");
-    its = its.slice().sort(function (a, b) { return a.th.replace(Q, "").localeCompare(b.th.replace(Q, ""), "hr"); });
-    panel.innerHTML = '<p class="pregion-h">' + bi("<b>" + esc(r.hr) + "</b>", "<i>" + esc(r.en) + "</i>") + " — " +
-      bi(pjesme(its.length), its.length + " poems") + " " +
-      '<button type="button" class="pregion-x">' + bi("Zatvori", "Close") + "</button></p><ul>" +
-      its.map(function (it) {      // both: the Croatian title is the link, the English beside it; English only: the English is the link
-        var h = 'href="pjesme/' + it.s + '.html"';
-        return '<li><span class="sw" style="background:' + (CAT[it.c] || ["#888"])[0] + '"></span><a ' + h + ' lang="hr">' +
-          esc(it.th) + '</a> <i lang="en" class="t-sep">' + esc(it.te) + '</i><a ' + h + ' lang="en" class="solo">' + esc(it.te) + "</a></li>";
-      }).join("") + "</ul>";
-    panel.hidden = false;
-    if (!input || !input.value.trim()) highlight(its.map(function (it) { return { it: it }; }), 0);
-    var first = panel.querySelector("li a");
-    if (first && byKey) first.focus();      // keyboard: straight into the list; Esc comes back
-  }
-  function closeRegion(refocus) {
-    if (!panel || openR === null) return;
-    var btn = openBtn;
-    if (btn) { btn.setAttribute("aria-expanded", "false"); btn.classList.remove("on"); }
-    openR = null; openBtn = null;
-    panel.hidden = true;
-    if (!input || !input.value.trim()) highlight([], 0);
-    if (refocus && btn) btn.focus();
-  }
-
   /* ---------------- zooming in on a category ----------------
-     The way in: a category's name under the map, or a region label named after a category. tools/finder.py
-     (category_zoom) ships for each category the box its dots fill (F.zoom[c].v), its sub-groups (F.zoom[c].g, each
-     poem's group in F.sg) and the family's picks (F.zoom[c].pk, from data/map_picks.json). Zoomed in: only that
-     category's poems are shown (the others are hidden, and come back with the whole map), sub-labels name the groups (each opens the list of its poems), and a few poems get callouts
-     (the picks always, the rest drawn at random on every zoom). The address keeps the zoom (#karta-ljubavne). */
+     The way in: a category's name under the map, or its name on the map. tools/finder.py (category_zoom) ships for
+     each category the box its dots fill (F.zoom[c].v), its theme hints (F.zoom[c].g) and the family's picks
+     (F.zoom[c].pk, from data/map_picks.json). Zoomed in: only that category's poems are shown (the others are hidden,
+     and come back with the whole map), small italic words hint at its themes, and a few poems get callouts (the
+     picks always, the rest drawn at random on every zoom). The address keeps the zoom (#karta-ljubavne). */
   var view = { x: 0, y: 0, w: W, h: H }, zoomCat = null, anim = 0, coPicks = [], zbar = null, zinfo = null, subG = null, coG = null;
   var TOP = 42;           // px kept free at the top of the zoomed map for the "Whole map" bar
   var reduced = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
@@ -581,13 +538,8 @@
     if (!svg || !zdata(c)) return;
     ensureZoomUI();
     var keep = o.keep && c === zoomCat;      // a new size or language: same view, same callouts
-    if (!keep) { closeRegion(false); hideTip(); pickCallouts(c); }
+    if (!keep) { hideTip(); pickCallouts(c); }
     zoomCat = c;
-    var cb = document.querySelector('#plegend input[data-cat="' + c + '"]');
-    if (cb && !cb.checked) {      // a hidden category is shown again when zoomed in on
-      cb.checked = true;
-      cb.dispatchEvent(new Event("change", { bubbles: true }));
-    }
     svg.classList.add("zoomed");
     Object.keys(dots).forEach(function (s) { dots[s].classList.toggle("off", dots[s].getAttribute("data-c") !== c); });
     Array.prototype.forEach.call(document.querySelectorAll("#plegend .pzb"), function (b) {
@@ -616,7 +568,6 @@
     if (!zoomCat) return;
     var c = zoomCat, a = document.activeElement, inside = svg.contains(a) || (zbar && zbar.contains(a));
     zoomCat = null;
-    closeRegion(false);
     hideTip();
     clearOverlay();
     if (o.hash !== false) leaveHash();
@@ -663,39 +614,31 @@
     drawCallouts(c, t);
     dimCallouts();
   }
-  // sub-labels: one per group, at its centre, nudged apart; each opens the list of its poems under the map
+  // theme hints: one small italic word per group of the category's poems, at the group's centre, nudged apart.
+  // Only a hint of what lies where (not a category, not a control), so hidden from screen readers.
   function drawSubs(c, u) {
-    var z = zdata(c);
-    subG = el("g", { "class": "subs" });
-    z.g.forEach(function (g, gi) {
-      var its = F.items.filter(function (it) { return it.c === c && it.g === String(gi); });
+    subG = el("g", { "class": "subs", "aria-hidden": "true" });
+    zdata(c).g.forEach(function (g) {
       var xy = px([g[0] / 1e4, g[1] / 1e4]);
-      var b = el("g", { "class": "sub-b", role: "button", tabindex: "0", "aria-expanded": "false", "aria-controls": "pregion" });
-      langAttr(b, "aria-label", g[2] + ": " + pjesme(its.length), g[3] + ": " + its.length + (its.length === 1 ? " poem" : " poems"));
       var t = el("text", { x: xy[0], y: xy[1], "class": "sub", "text-anchor": "middle" });
-      [["hr", g[2]], [null, "\u00a0·\u00a0"], ["en", g[3]]].forEach(function (p) {
-        var s = el("tspan", p[0] ? { lang: p[0] } : { "class": "t-sep" });
+      // a name the same in both languages (Sopje, Valpovo) is written once, for every language mode
+      (g[2] === g[3] ? [["", g[2]]] : [["hr", g[2]], [null, "\u00a0·\u00a0"], ["en", g[3]]]).forEach(function (p) {
+        var s = el("tspan", p[0] ? { lang: p[0] } : p[0] === null ? { "class": "t-sep" } : {});
         s.textContent = p[1];
         t.appendChild(s);
       });
-      b.appendChild(t);
-      subG.appendChild(b);
-      var open = function (byKey) {
-        openList("s" + c + gi, b, byKey, { hr: CAT[c][1] + " · " + g[2], en: CAT[c][2] + " · " + g[3] }, its);
-      };
-      b.addEventListener("click", function (e) { e.stopPropagation(); open(false); });
-      b.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(true); } });
+      subG.appendChild(t);
     });
     svg.appendChild(subG);
     var bs = Array.prototype.slice.call(subG.childNodes);
-    for (var k = 0; k < 60; k++) {       // nudge overlapping sub-labels apart, vertically
+    for (var k = 0; k < 60; k++) {       // nudge overlapping hints apart, vertically
       var bx = bs.map(function (b) { return b.getBBox(); }), moved = false;
       for (var i = 0; i < bx.length; i++) for (var j = i + 1; j < bx.length; j++) {
         var a = bx[i], d = bx[j];
         if (a.x < d.x + d.width + 4 * u && d.x < a.x + a.width + 4 * u && a.y < d.y + d.height && d.y < a.y + a.height) {
-          var up = a.y <= d.y ? i : j, dn = up === i ? j : i, tu = bs[up].firstChild, td = bs[dn].firstChild;
-          tu.setAttribute("y", +tu.getAttribute("y") - 2 * u);
-          td.setAttribute("y", +td.getAttribute("y") + 2 * u);
+          var up = a.y <= d.y ? i : j, dn = up === i ? j : i;
+          bs[up].setAttribute("y", +bs[up].getAttribute("y") - 2 * u);
+          bs[dn].setAttribute("y", +bs[dn].getAttribute("y") + 2 * u);
           moved = true;
         }
       }
@@ -728,10 +671,10 @@
     if (compact) { drawBadges(list, u); return; }
     coG.setAttribute("role", "list");
     langAttr(coG, "aria-label", "Istaknute pjesme: " + CAT[c][1], "Highlighted poems: " + CAT[c][2]);
-    // what a title must not cover: the category's dots, the sub-labels, the titles already placed
+    // what a title must not cover: the category's dots, the theme hints, the titles already placed
     var obst = [], bx = t.box, colGap = K * ZR * 7 + 10 * u, minW = 90 * u, capW = 210 * u, x0 = view.x + 6 * u, x1 = view.x + view.w - 6 * u, midV = view.x + view.w / 2;
     F.items.forEach(function (it) {
-      if (it.c !== c || dots[it.s].style.display === "none") return;
+      if (it.c !== c) return;
       var p = px(it.p), r = radius(it.s) + 2 * u;
       obst.push({ x0: p[0] - r, x1: p[0] + r, y0: p[1] - r, y1: p[1] + r });
     });
@@ -822,12 +765,15 @@
         var q = [p[0] + Math.cos(ang) * rr, p[1] + Math.sin(ang) * rr], d = 1e9;
         marks.forEach(function (m) { d = Math.min(d, Math.sqrt(Math.pow(m[0] - q[0], 2) + Math.pow(m[1] - q[1], 2)) / 2.2); });
         placed.forEach(function (m, j) { if (j !== i) d = Math.min(d, Math.sqrt(Math.pow(m[0] - q[0], 2) + Math.pow(m[1] - q[1], 2))); });
-        subs.forEach(function (b) {       // keep the sub-labels readable
+        subs.forEach(function (b) {       // keep the theme hints readable
           if (q[0] > b.x - R && q[0] < b.x + b.width + R && q[1] > b.y - R && q[1] < b.y + b.height + R) d = Math.min(d, R / 2);
         });
         if (q[0] < view.x + R || q[0] > view.x + view.w - R || q[1] < view.y + (TOP + 2) * u + R || q[1] > view.y + view.h - R) d = -1;
         if (d > bs) { bs = d; best = q; }
         if (d >= 2.4 * R) break;
+      }
+      if (!best) {       // no free spot inside the view (a dot at its very edge): the marker just inside, by the dot
+        best = [clamp(p[0] + 17 * u, view.x + R, view.x + view.w - R), clamp(p[1] - 17 * u, view.y + (TOP + 2) * u + R, view.y + view.h - R)];
       }
       marks.push(best);
       var r = radius(it.s), dx = best[0] - p[0], dy = best[1] - p[1], dl = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -845,7 +791,7 @@
   }
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape" || !zoomCat || e.defaultPrevented) return;
-    if ((panel && panel.contains(e.target)) || e.target === input) return;    // Esc closes the list, or clears the search, first
+    if (e.target === input) return;    // Esc clears the search first
     zoomOut({});
   });
   window.addEventListener("popstate", function () { applyHash(false); });
@@ -911,7 +857,6 @@
   }
   function render(q) {
     kittenCheck(q);
-    closeRegion(false);
     var r = search(q);
     list = r.res;
     shown = Math.min(PAGE, list.length);
