@@ -72,12 +72,6 @@
       "</div></details>";
     box.querySelector("details").addEventListener("toggle", function () {
       if (!this.open) return;
-      if (!document.getElementById("type-face")) {
-        var l = document.createElement("link");
-        l.id = "type-face"; l.rel = "stylesheet";
-        l.href = "https://fonts.googleapis.com/css2?family=Special+Elite&display=swap";
-        document.head.appendChild(l);
-      }
       loadMap(function () { drawMap(t.hr); });
     });
     if (window.BENAK_LANG && window.BENAK_LANG.attrs) window.BENAK_LANG.attrs(box);

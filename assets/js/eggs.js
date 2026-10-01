@@ -122,13 +122,9 @@
   });
 
   /* ---------- a typed note on paper (he wrote on a typewriter, so the eggs' pop-ups look typed) ---------- */
-  var typeface = function () {     // the typewriter face, fetched from Google Fonts only when the first egg hatches
-    typeface = function () {};
-    var l = document.createElement("link");
-    l.rel = "stylesheet";
-    l.href = "https://fonts.googleapis.com/css2?family=Special+Elite&display=swap";
-    document.head.appendChild(l);
-  };
+  function typeface() {     // the typewriter face (site.css, assets/fonts): warmed up before the first note opens
+    try { if (document.fonts && document.fonts.load) document.fonts.load('15px "Special Elite"', "Molim? Čćđšž"); } catch (e) {}
+  }
   function win(title, html, cls, head) {   // title: [hr, en, both-mode]; head: the typed heading's HTML (default: both, with " · ")
     typeface();
     var w = document.createElement("div");
