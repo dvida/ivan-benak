@@ -122,11 +122,10 @@
 
   var kidsSet = {};
   F.kids.forEach(function (w) { kidsSet[w] = 1; });
-  F.items.forEach(function (it, n) {
+  F.items.forEach(function (it) {
     var tot = 0;
     Object.keys(it.m).forEach(function (m) { tot += it.m[m]; });
     it.mt = tot || 1;
-    it.g = F.sg ? F.sg.charAt(n) : ".";     // its sub-group in the zoomed view of its category ("." = none)
   });
 
   function search(q) {
@@ -305,24 +304,6 @@
       });
       if (best) showTip(best, true); else hideTip();
     });
-    var leg = document.getElementById("plegend");
-    // the key: each category's colour and name, a button that zooms the map in on it (again: back to the whole map)
-    if (leg) leg.innerHTML = Object.keys(CAT).map(function (k) {
-      return '<button type="button" class="pzb" data-zoom="' + k + '" aria-pressed="false"><span class="sw" style="background:' + CAT[k][0] + '"></span>' +
-        '<span lang="hr">' + esc(CAT[k][1]) + '</span> <i lang="en">' + esc(CAT[k][2]) + "</i></button>";
-    }).join("");
-    if (leg) Array.prototype.forEach.call(leg.querySelectorAll(".pzb"), function (b) {
-      var k = b.getAttribute("data-zoom");
-      langAttr(b, "aria-label", "Približi na karti: " + CAT[k][1], "Zoom the map in on: " + CAT[k][2]);
-      langAttr(b, "title", "Približi na karti", "Zoom the map in");
-    });
-    if (leg) leg.addEventListener("click", function (e) {
-      var b = e.target.closest && e.target.closest(".pzb");
-      if (!b) return;
-      var k = b.getAttribute("data-zoom");
-      if (k === zoomCat) zoomOut({ byKey: e.detail === 0 });
-      else zoomTo(k, { push: true, byKey: e.detail === 0, scroll: true });
-    });
     var rt;
     window.addEventListener("resize", function () {
       clearTimeout(rt);
@@ -415,18 +396,22 @@
     dimCallouts();
   }
   function dimCallouts() {      // zoomed in and searching: the callouts of poems the search left out step back
-    if (coG) Array.prototype.forEach.call(coG.querySelectorAll("[data-s]"), function (g) {
-      g.classList.toggle("dim", !!lit && !lit[g.getAttribute("data-s")]);
+    [coG, coL].forEach(function (G) {
+      if (G) Array.prototype.forEach.call(G.querySelectorAll("[data-s]"), function (g) {
+        g.classList.toggle("dim", !!lit && !lit[g.getAttribute("data-s")]);
+      });
     });
   }
 
   /* ---------------- zooming in on a category ----------------
      The way in: a category's name under the map, or its name on the map. tools/finder.py (category_zoom) ships for
-     each category the box its dots fill (F.zoom[c].v), its theme hints (F.zoom[c].g) and the family's picks
-     (F.zoom[c].pk, from data/map_picks.json). Zoomed in: only that category's poems are shown (the others are hidden,
-     and come back with the whole map), small italic words hint at its themes, and a few poems get callouts (the
-     picks always, the rest drawn at random on every zoom). The address keeps the zoom (#karta-ljubavne). */
-  var view = { x: 0, y: 0, w: W, h: H }, zoomCat = null, anim = 0, coPicks = [], zbar = null, zinfo = null, subG = null, coG = null;
+     each category the box its area fills (F.zoom[c].v), the sub-areas of its subgroups with their names
+     (F.zoom[c].g: [x0, y0, x1, y1, hr, en], from data/map_subgroups.json) and the family's picks (F.zoom[c].pk, from
+     data/map_picks.json). Zoomed in: only that category's poems are shown (the others are hidden, and come back with
+     the whole map), each subgroup's name stands at the top of its own faintly tinted sub-area, over exactly its
+     poems, and a few poems get callouts (the picks always, the rest drawn at random on every zoom). The address keeps
+     the zoom (#karta-ljubavne). */
+  var view = { x: 0, y: 0, w: W, h: H }, zoomCat = null, anim = 0, coPicks = [], zbar = null, zinfo = null, subG = null, subA = null, coG = null, coL = null, zsubs = null, zlist = null;
   var TOP = 42;           // px kept free at the top of the zoomed map for the "Whole map" bar
   var reduced = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
   function el(tag, at) {
@@ -468,26 +453,31 @@
   // the viewBox for a category: its box with some air, the bar's strip on top and, on wide screens, room for the
   // callout titles on each side (titles may also tuck in beside the dots); u = map units per screen pixel
   function targetView(c) {
-    if (zbar && !zbar.hidden && zbar.offsetHeight) TOP = zbar.offsetHeight + 8;    // the bar may take two lines on a phone
     var b = boxOf(c), S = screenW(), cmp = isCompact();
+    // phones: the "Whole map" bar sits above the map instead of over it, and the zoomed map takes the category's own
+    // shape (from half as tall as wide to a little taller than wide), so its subgroup names get as much room as the screen allows
+    if (zbar) svg.parentNode.classList.toggle("pz-compact", cmp);
+    if (cmp) TOP = 4;
+    else if (zbar && !zbar.hidden && zbar.offsetHeight) TOP = zbar.offsetHeight + 8;    // the bar may take two lines
     var g = cmp ? 0 : 0.8 * clamp(Math.max.apply(null, titleWidths(coPicks.slice(0, calloutCount())).concat(0)), 110, 210) + 14;
     var cw = b.x1 - b.x0, ch = b.y1 - b.y0, pad = 10 + 0.03 * Math.max(cw, ch);
-    var w = Math.max((cw + 2 * pad) / (1 - 2 * g / S), (ch + 2 * pad) / (H / W - TOP / S), cmp ? 200 : 280);
+    var r = cmp ? clamp((ch + 2 * pad + TOP * 2) / (cw + 2 * pad), 0.5, 1.25) : H / W;
+    var w = Math.max((cw + 2 * pad) / (1 - 2 * g / S), (ch + 2 * pad) / (r - TOP / S), cmp ? 150 : 280);
     w = Math.min(w, W);         // a category spread over the whole map: no zoom, but only its poems, sub-labels, callouts
-    var h = w * H / W, u = w / S;
+    var h = w * r, u = w / S;
     var x = (b.x0 + b.x1) / 2 - w / 2, y = (b.y0 + b.y1) / 2 - h / 2 - TOP * u / 2;
     return { x: x, y: y, w: w, h: h, u: u, box: b };
   }
   function animateView(t, instant, done) {
     cancelAnimationFrame(anim);
     if (instant || (reduced && reduced.matches)) { svg.classList.remove("zooming"); setView(t); done(); return; }
-    var f = view, t0 = null, D = 650, fw = Math.log(f.w), tw = Math.log(t.w);
+    var f = view, t0 = null, D = 650, fw = Math.log(f.w), tw = Math.log(t.w), fr = f.h / f.w, tr = t.h / t.w;
     var fx = f.x + f.w / 2, fy = f.y + f.h / 2, tx = t.x + t.w / 2, ty = t.y + t.h / 2;
     svg.classList.add("zooming");
     function step(now) {
       if (t0 === null) t0 = now;
       var k = Math.min(1, (now - t0) / D), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(2 - 2 * k, 3) / 2;
-      var w = Math.exp(fw + (tw - fw) * e), h = w * H / W;
+      var w = Math.exp(fw + (tw - fw) * e), h = w * (fr + (tr - fr) * e);
       setView({ x: fx + (tx - fx) * e - w / 2, y: fy + (ty - fy) * e - h / 2, w: w, h: h });
       if (k < 1) anim = requestAnimationFrame(step);
       else { svg.classList.remove("zooming"); setView(t); done(); }
@@ -513,7 +503,7 @@
       coPicks.push(pool.splice(i, 1)[0]);
     }
   }
-  function legendBtn(c) { return document.querySelector('#plegend .pzb[data-zoom="' + c + '"]'); }
+  function legendBtn(c) { return svg.querySelector('.reg-b[data-z="' + c + '"]'); }   // the category's name on the map
   function ensureZoomUI() {
     if (zbar) return;
     var wrap = svg.parentNode;
@@ -525,7 +515,9 @@
     zinfo = document.createElement("div");      // under the map: (phones) the highlighted titles, other picks, the whole list
     zinfo.className = "pzoom-info";
     zinfo.hidden = true;
-    zinfo.innerHTML = '<div class="pz-listwrap"></div><p class="pz-links"></p>';
+    zinfo.innerHTML = '<div class="pz-subwrap"></div><div class="pz-listwrap"></div><p class="pz-links"></p>';
+    zsubs = zinfo.firstChild;
+    zlist = zsubs.nextSibling;
     wrap.parentNode.insertBefore(zinfo, wrap.nextSibling);
     zinfo.addEventListener("click", function (e) {
       if (!e.target.closest(".pz-more") || !zoomCat) return;
@@ -542,9 +534,6 @@
     zoomCat = c;
     svg.classList.add("zoomed");
     Object.keys(dots).forEach(function (s) { dots[s].classList.toggle("off", dots[s].getAttribute("data-c") !== c); });
-    Array.prototype.forEach.call(document.querySelectorAll("#plegend .pzb"), function (b) {
-      b.setAttribute("aria-pressed", b.getAttribute("data-zoom") === c ? "true" : "false");
-    });
     var n = F.items.filter(function (it) { return it.c === c; }).length;
     zbar.innerHTML = '<button type="button" class="pz-back">&larr; ' + bi("Cijela karta", "Whole map") + '</button>' +
       '<span class="pz-name"><span class="sw" style="background:' + CAT[c][0] + '"></span>' + bi(esc(CAT[c][1]), esc(CAT[c][2])) +
@@ -573,14 +562,14 @@
     if (o.hash !== false) leaveHash();
     zbar.hidden = zinfo.hidden = true;
     Object.keys(dots).forEach(function (s) { dots[s].classList.remove("off"); });
-    var lb = legendBtn(c);
-    if (lb) lb.setAttribute("aria-pressed", "false");
-    if (inside && lb) lb.focus({ preventScroll: true });     // the focused callout or button is gone: back to the category's name
     animateView({ x: 0, y: 0, w: W, h: H }, o.instant, function () {
       if (zoomCat) return;
       svg.classList.remove("zoomed");
+      svg.parentNode.classList.remove("pz-compact");
       svg.style.removeProperty("--u");
       layoutLabels();
+      var lb = legendBtn(c);
+      if (inside && lb) lb.focus({ preventScroll: true });   // the focused callout or button is gone: back to the category's name
     });
   }
   function setHash(c) {
@@ -600,10 +589,10 @@
     else if (!c && zoomCat) zoomOut({ hash: false });
   }
   function clearOverlay() {
-    [subG, coG].forEach(function (g) { if (g && g.parentNode) g.parentNode.removeChild(g); });
-    subG = coG = null;
+    [subA, subG, coL, coG].forEach(function (g) { if (g && g.parentNode) g.parentNode.removeChild(g); });
+    subA = subG = coL = coG = null;
     Object.keys(dots).forEach(function (s) { dots[s].classList.remove("co-dot", "co-on"); });
-    if (zinfo) zinfo.firstChild.innerHTML = "";
+    if (zinfo) zsubs.innerHTML = zlist.innerHTML = "";
   }
   function drawOverlay(c, t) {
     clearOverlay();
@@ -614,36 +603,102 @@
     drawCallouts(c, t);
     dimCallouts();
   }
-  // theme hints: one small italic word per group of the category's poems, at the group's centre, nudged apart.
-  // Only a hint of what lies where (not a category, not a control), so hidden from screen readers.
+  // the subgroups (tools/finder.py layout_areas): each a faint tint behind its dots, and its name at the top of it,
+  // in the strip finder.py keeps free there (g[4] high); a name too wide for its sub-area is wrapped, and made a
+  // little smaller where its lines would not fit the strip (see below for cramped sub-areas). The names on the map
+  // are hidden from screen readers, which get the list under the map instead (always there, visually hidden).
   function drawSubs(c, u) {
+    var gs = zdata(c).g || [], col = (CAT[c] || ["#888"])[0], md = mode(), compact = isCompact();
+    if (!gs.length) return;
+    subA = el("g", { "class": "sub-areas", "aria-hidden": "true" });
+    svg.insertBefore(subA, svg.querySelector("g.dots"));
     subG = el("g", { "class": "subs", "aria-hidden": "true" });
-    zdata(c).g.forEach(function (g) {
-      var xy = px([g[0] / 1e4, g[1] / 1e4]);
-      var t = el("text", { x: xy[0], y: xy[1], "class": "sub", "text-anchor": "middle" });
-      // a name the same in both languages (Sopje, Valpovo) is written once, for every language mode
-      (g[2] === g[3] ? [["", g[2]]] : [["hr", g[2]], [null, "\u00a0·\u00a0"], ["en", g[3]]]).forEach(function (p) {
-        var s = el("tspan", p[0] ? { lang: p[0] } : p[0] === null ? { "class": "t-sep" } : {});
-        s.textContent = p[1];
-        t.appendChild(s);
-      });
-      subG.appendChild(t);
-    });
     svg.appendChild(subG);
-    var bs = Array.prototype.slice.call(subG.childNodes);
-    for (var k = 0; k < 60; k++) {       // nudge overlapping hints apart, vertically
-      var bx = bs.map(function (b) { return b.getBBox(); }), moved = false;
-      for (var i = 0; i < bx.length; i++) for (var j = i + 1; j < bx.length; j++) {
-        var a = bx[i], d = bx[j];
-        if (a.x < d.x + d.width + 4 * u && d.x < a.x + a.width + 4 * u && a.y < d.y + d.height && d.y < a.y + a.height) {
-          var up = a.y <= d.y ? i : j, dn = up === i ? j : i;
-          bs[up].setAttribute("y", +bs[up].getAttribute("y") - 2 * u);
-          bs[dn].setAttribute("y", +bs[dn].getAttribute("y") + 2 * u);
-          moved = true;
+    var base = compact ? 10.5 : 11.5, least = compact ? 9.5 : 10, floor = compact ? 8 : 9;
+    var laid = gs.map(function (g) {
+      var a = px([g[0] / 1e4, g[1] / 1e4]), b = px([g[2] / 1e4, g[3] / 1e4]), strip = g[4] / 1e4 * (H - 2 * PAD);
+      subA.appendChild(el("rect", { "class": "sub-a", x: a[0], y: a[1], width: b[0] - a[0], height: b[1] - a[1], rx: 4, fill: col, stroke: col }));
+      // the languages shown: a name the same in both (Sopje, Valpovo) is written once, for every language mode
+      var parts = g[5] === g[6] ? [["", g[5]]] : md === "hr" ? [["hr", g[5]]] : md === "en" ? [["en", g[6]]] : [["hr", g[5]], ["en", g[6]]];
+      var maxW = b[0] - a[0] - 6 * u, t = el("text", { "class": "sub", "text-anchor": "middle" });
+      subG.appendChild(t);
+      function attempt(ps, lo) {   // smaller, down to lo px, until the lines fit the strip at the top of the sub-area
+        var fs = base, lines, wide;
+        for (;;) {
+          t.style.fontSize = "calc(" + fs.toFixed(2) + "px * var(--u, 1))";
+          lines = [];
+          wide = false;
+          ps.forEach(function (p) {
+            wrapWords(t, p[1], maxW, p[0]).forEach(function (l) {
+              lines.push([p[0], l[0]]);
+              if (l[1] > maxW) wide = true;      // one word wider than the sub-area
+            });
+          });
+          var tall = (3 + lines.length * 1.1 * fs + 6) * u > strip + 2 * u;
+          if ((!wide && !tall) || fs <= lo) return { fs: fs, lines: lines, fits: !wide && !tall };
+          fs = Math.max(lo, fs * 0.95);
         }
       }
-      if (!moved) break;
-    }
+      // the name always goes on the map: if it does not fit, first a smaller type; in both-mode a cramped sub-area then
+      // shows the Croatian name only (the list under the map, for screen readers, has both); at the last the name may run
+      // a little into the area, on a paper-coloured halo so it stays legible over the dots
+      var r = attempt(parts, least);
+      if (!r.fits && parts.length > 1) { var r2 = attempt(parts.slice(0, 1), least); if (r2.fits) r = r2; }
+      if (!r.fits) r = attempt(parts.length > 1 ? parts.slice(0, 1) : parts, floor);
+      return { a: a, b: b, t: t, fs: r.fs, lines: r.lines, fits: r.fits };
+    });
+    var order = laid.map(function (l, k) { return k; }).sort(function (i, j) {   // the list under the map in reading order
+      return Math.abs(laid[i].a[1] - laid[j].a[1]) > 4 * u ? laid[i].a[1] - laid[j].a[1] : laid[i].a[0] - laid[j].a[0];
+    });
+    laid.forEach(function (l) {
+      var t = l.t;
+      while (t.firstChild) t.removeChild(t.firstChild);
+      t.style.fontSize = "calc(" + l.fs.toFixed(2) + "px * var(--u, 1))";
+      if (!l.fits) t.setAttribute("class", "sub sub-tight");
+      var lh = 1.1 * l.fs * u, x = (l.a[0] + l.b[0]) / 2, y = l.a[1] + 2.5 * u + 0.85 * l.fs * u;
+      l.lines.forEach(function (ln, i) {
+        var sp = el("tspan", { x: x, y: y + i * lh, "class": ln[0] === "en" ? "sub-en" : "sub-hr" });
+        if (ln[0]) sp.setAttribute("lang", ln[0]);
+        sp.textContent = ln[1];
+        t.appendChild(sp);
+      });
+    });
+    // under the map, for screen readers: the subgroups with their poem counts
+    var cnt = gs.map(function (g, k) {
+      var l = laid[k];
+      return F.items.filter(function (it) {
+        if (it.c !== c) return false;
+        var p = px(it.p);
+        return p[0] >= l.a[0] && p[0] <= l.b[0] && p[1] >= l.a[1] && p[1] <= l.b[1];
+      }).length;
+    });
+    zsubs.className = "pz-subwrap sr-only";     // on the map itself the names say it already
+    zsubs.innerHTML = '<p class="pz-h" id="pz-sh">' + bi("Podskupine", "Subgroups") + "</p>" +
+      '<ul class="pz-subs" aria-labelledby="pz-sh">' + order.map(function (k) {
+        var g = gs[k];
+        return "<li><span>" + (g[5] === g[6] ? esc(g[5]) : bi(esc(g[5]), "<i>" + esc(g[6]) + "</i>")) +
+          ' <span class="count">(' + cnt[k] + ")</span></span></li>";
+      }).join("") + "</ul>";
+  }
+  // a name in lines no wider than maxW, broken between words (a single word wider than that stays whole):
+  // [[line, its width], ...]
+  function wrapWords(t, s, maxW, lang) {
+    var sp = el("tspan", lang ? { lang: lang } : {}), ws = s.split(" "), out = [], cur = "", cw = 0;
+    t.appendChild(sp);
+    ws.forEach(function (w) {
+      var next = cur ? cur + " " + w : w;
+      sp.textContent = next;
+      var len = sp.getComputedTextLength();
+      if (cur && len > maxW) {
+        out.push([cur, cw]);
+        cur = w;
+        sp.textContent = w;
+        cw = sp.getComputedTextLength();
+      } else { cur = next; cw = len; }
+    });
+    if (cur) out.push([cur, cw]);
+    t.removeChild(sp);
+    return out;
   }
   function titleTspans(t, it, x, u) {    // the title in the visitor's language(s): Croatian, English, or both stacked
     var both = mode() === "both", h = el("tspan", { lang: "hr", "class": "co-hr" }), e = el("tspan", { lang: "en", "class": "co-en", x: x, dy: both ? 16 * u : 0 });
@@ -663,6 +718,9 @@
     var u = t.u, both = mode() === "both", compact = isCompact();
     coG = el("g", { "class": "callouts" });
     svg.appendChild(coG);
+    // the leader lines run under the subgroup names (their halo hides a line where it crosses one)
+    coL = el("g", { "class": "callouts co-lines", "aria-hidden": "true" });
+    svg.insertBefore(coL, subG || coG);
     var n = calloutCount();
     var rowH = (both ? 34 : 19) * u, gap = 7 * u, top = view.y + (TOP + 4) * u, bottom = view.y + view.h - 6 * u;
     if (!compact) n = Math.min(n, 2 * Math.floor((bottom - top + gap) / (rowH + gap)));
@@ -671,7 +729,7 @@
     if (compact) { drawBadges(list, u); return; }
     coG.setAttribute("role", "list");
     langAttr(coG, "aria-label", "Istaknute pjesme: " + CAT[c][1], "Highlighted poems: " + CAT[c][2]);
-    // what a title must not cover: the category's dots, the theme hints, the titles already placed
+    // what a title must not cover: the category's dots, the subgroup names, the titles already placed
     var obst = [], bx = t.box, colGap = K * ZR * 7 + 10 * u, minW = 90 * u, capW = 210 * u, x0 = view.x + 6 * u, x1 = view.x + view.w - 6 * u, midV = view.x + view.w / 2;
     F.items.forEach(function (it) {
       if (it.c !== c) return;
@@ -680,13 +738,24 @@
     });
     if (subG) Array.prototype.forEach.call(subG.childNodes, function (n) {
       var q = n.getBBox();
-      obst.push({ x0: q.x, x1: q.x + q.width, y0: q.y, y1: q.y + q.height });
+      obst.push({ x0: q.x - 8 * u, x1: q.x + q.width + 8 * u, y0: q.y - 2 * u, y1: q.y + q.height + 2 * u });
     });
     // where a title of width w goes in its row (top y), on one side of its dot: the free gaps of the row from the
     // dot outwards, each costing its leader's length plus what the title loses if the gap is too narrow
+    // and the sub-areas of the other subgroups: a title inside one would seem to belong to it
+    var areasR = subA ? Array.prototype.map.call(subA.childNodes, function (n) {
+      var q = n.getBBox();
+      return { x0: q.x, x1: q.x + q.width, y0: q.y, y1: q.y + q.height };
+    }) : [];
     function slot(side, it, y, w) {
       var p = px(it.p), r = radius(it.s), y0 = y - 2 * u, y1 = y + rowH + 2 * u, k = side === "end" ? -1 : 1, best = null;
-      var band = obst.filter(function (o) { return o.y1 > y0 && o.y0 < y1; });
+      var foreign = areasR.filter(function (o) { return !(p[0] >= o.x0 && p[0] <= o.x1 && p[1] >= o.y0 && p[1] <= o.y1) && o.y1 > y0 && o.y0 < y1; });
+      var band = obst.filter(function (o) { return o.y1 > y0 && o.y0 < y1; }).concat(foreign);
+      function cross(a) {       // how far a leader from the dot to a runs over other subgroups' sub-areas
+        var lo = Math.min(p[0], a), hi = Math.max(p[0], a), d = 0;
+        foreign.forEach(function (o) { d += Math.max(0, Math.min(hi, o.x1) - Math.max(lo, o.x0)); });
+        return d;
+      }
       var a0 = p[0] + k * (r + 10 * u), cs = [a0], col = k < 0 ? bx.x0 - colGap : bx.x1 + colGap;
       function free(a) {        // the width free outwards from a (0 if something lies on a)
         if (band.some(function (o) { return o.x0 - 4 * u < a && o.x1 + 4 * u > a; })) return 0;
@@ -698,12 +767,12 @@
         return Math.max(0, (lim - a) * k);
       }
       // the column just outside the category's box, where the titles line up, costs a little less than a gap
-      if ((col - a0) * k >= 0 && free(col) >= 0.8 * w) best = { a: col, avail: free(col), cost: 0.7 * Math.abs(col - p[0]) };
+      if ((col - a0) * k >= 0 && free(col) >= 0.8 * w) best = { a: col, avail: free(col), cost: 0.7 * Math.abs(col - p[0]) + 3 * cross(col) };
       band.forEach(function (o) { var a = k < 0 ? o.x0 - 6 * u : o.x1 + 6 * u; if ((a - a0) * k > 0) cs.push(a); });
       cs.forEach(function (a) {
         var avail = free(a);
         if (avail < Math.min(minW, w)) return;
-        var cost = Math.abs(a - p[0]) + 1.5 * Math.max(0, w - avail);
+        var cost = Math.abs(a - p[0]) + 1.5 * Math.max(0, w - avail) + 3 * cross(a);
         if (!best || cost < best.cost) best = { a: a, avail: avail, cost: cost };
       });
       if (!best) {        // no free gap: at the edge of the view, over whatever is there
@@ -739,7 +808,8 @@
         var tx = el("text", { x: x, y: y + 13 * u, "class": "co-t", "text-anchor": col[1] });
         var sp = titleTspans(tx, it, x, u);
         a.appendChild(tx);
-        li.appendChild(line);
+        line.setAttribute("data-s", it.s);
+        coL.appendChild(line);
         li.appendChild(a);
         coG.appendChild(li);
         sp.forEach(function (s) { fit(s, maxW); });
@@ -760,13 +830,13 @@
     var subs = subG ? Array.prototype.map.call(subG.childNodes, function (n) { return n.getBBox(); }) : [];
     list.forEach(function (it, i) {
       var p = px(it.p), best = null, bs = -1;
-      for (var k = 0; k < 16; k++) {      // up-right first, then around the dot (and a little farther): the freest spot
-        var ang = [-45, -135, 45, 135, -90, 0, 90, 180][k % 8] * Math.PI / 180, rr = (k < 8 ? 17 : 27) * u;
+      for (var k = 0; k < 24; k++) {      // up-right first, then around the dot (and farther out): the freest spot
+        var ang = [-45, -135, 45, 135, -90, 0, 90, 180][k % 8] * Math.PI / 180, rr = [17, 27, 38][Math.floor(k / 8)] * u;
         var q = [p[0] + Math.cos(ang) * rr, p[1] + Math.sin(ang) * rr], d = 1e9;
         marks.forEach(function (m) { d = Math.min(d, Math.sqrt(Math.pow(m[0] - q[0], 2) + Math.pow(m[1] - q[1], 2)) / 2.2); });
         placed.forEach(function (m, j) { if (j !== i) d = Math.min(d, Math.sqrt(Math.pow(m[0] - q[0], 2) + Math.pow(m[1] - q[1], 2))); });
-        subs.forEach(function (b) {       // keep the theme hints readable
-          if (q[0] > b.x - R && q[0] < b.x + b.width + R && q[1] > b.y - R && q[1] < b.y + b.height + R) d = Math.min(d, R / 2);
+        subs.forEach(function (b) {       // keep the subgroup names readable
+          if (q[0] > b.x - R && q[0] < b.x + b.width + R && q[1] > b.y - R && q[1] < b.y + b.height + R) d = Math.min(d, -0.5);
         });
         if (q[0] < view.x + R || q[0] > view.x + view.w - R || q[1] < view.y + (TOP + 2) * u + R || q[1] > view.y + view.h - R) d = -1;
         if (d > bs) { bs = d; best = q; }
@@ -783,7 +853,7 @@
       t.textContent = i + 1;
       coG.appendChild(t);
     });
-    zinfo.firstChild.innerHTML = '<p class="pz-h" id="pz-h">' + bi("Istaknute pjesme", "Highlighted poems") + "</p>" +
+    zlist.innerHTML = '<p class="pz-h" id="pz-h">' + bi("Istaknute pjesme", "Highlighted poems") + "</p>" +
       '<ol class="pz-list" aria-labelledby="pz-h">' + list.map(function (it, i) {
         return '<li><a href="pjesme/' + it.s + '.html"><span class="pz-n" aria-hidden="true">' + (i + 1) + "</span><span>" +
           bi(esc(it.th), "<i>" + esc(it.te || it.th) + "</i>") + "</span></a></li>";

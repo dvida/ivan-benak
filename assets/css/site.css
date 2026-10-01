@@ -431,8 +431,6 @@ html.show-both .foot .lbl span[lang="en"]::before, html.show-both .foot-bottom >
   background: #fffaf0; border: 1px solid var(--bevel-lo); box-shadow: 2px 2px 0 rgba(0,0,0,.12); pointer-events: none;
 }
 .ptip .tip-s { margin-top: 4px; color: var(--ink-soft); }
-.plegend { display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: center; font-size: 13.5px; margin-bottom: 10px; }
-.plegend i { color: var(--ink-soft); }
 .pcount { text-align: center; font-size: 14.5px; margin: 12px 0 0; }
 .pcount:empty { display: none; }
 .pmore-p { text-align: center; margin: 14px 0 6px; }
@@ -457,17 +455,15 @@ html.show-both .foot .lbl span[lang="en"]::before, html.show-both .foot-bottom >
 }
 /* the map zoomed in on one category (finder.js zoomTo). Texts inside the map are sized in screen pixels times
    --u (map units per pixel, set by finder.js), so they keep their size at every zoom. */
-.plegend .pzb {
   font: inherit; color: var(--ink); background: none; border: 1px solid transparent; padding: 2px 4px; min-height: 26px; cursor: pointer;
   text-decoration: underline dotted #a8987a; text-underline-offset: 3px;
 }
-.plegend .pzb:hover, .plegend .pzb:focus-visible { color: var(--link); text-decoration: underline; }
-.plegend .pzb[aria-pressed="true"] { background: var(--hi); border-color: var(--rule); font-weight: bold; text-decoration: none; }
 .pzoom-bar {
   position: absolute; top: 6px; left: 6px; right: 6px; z-index: 2; display: flex; flex-wrap: wrap; align-items: center;
   gap: 4px 10px; font-size: 14px; pointer-events: none;
 }
 .pzoom-bar[hidden], .pzoom-info[hidden] { display: none; }
+.pmapwrap.pz-compact .pzoom-bar { position: static; margin: 6px 6px 2px; }   /* phones: above the zoomed map, not over it */
 .pzoom-bar > * { pointer-events: auto; }
 .pz-back, .pz-more {
   font: inherit; font-size: 14px; padding: 2px 10px; min-height: 28px; cursor: pointer; color: var(--ink);
@@ -481,6 +477,12 @@ html.show-both .foot .lbl span[lang="en"]::before, html.show-both .foot-bottom >
 .pz-links a { display: inline-block; padding: 4px 6px; }
 .pz-h { margin: 6px 0 2px; font-size: 13.5px; color: var(--ink-soft); }
 .pz-list { list-style: none; margin: 0 auto; padding: 0; max-width: 520px; text-align: left; }
+.pz-subs { list-style: none; margin: 0 auto 6px; padding: 0; max-width: 520px; text-align: left; font-size: 14px; }
+.pz-subs li { display: flex; gap: 8px; align-items: baseline; padding: 2px 4px; }
+.pz-subs li i { color: var(--ink-soft); }
+html.show-en .pz-subs li i { font-style: normal; color: inherit; }
+.pz-subs .count { color: var(--ink-soft); font-size: 13px; }
+.pz-subs .pz-n { border-radius: 3px; font-style: italic; font-family: Georgia, serif; }
 .pz-list a { display: flex; gap: 8px; align-items: baseline; min-height: 30px; padding: 4px 4px; box-sizing: border-box; }
 .pz-list a i { color: var(--ink-soft); }
 html.show-en .pz-list a i { font-style: normal; color: inherit; }
@@ -495,15 +497,20 @@ html.show-en .pz-list a i { font-style: normal; color: inherit; }
 #pmap .dot.co-dot { stroke: var(--ink); stroke-width: 1.3; opacity: 1; }
 #pmap .dot.co-dot.dim { opacity: .3; }
 #pmap .dot.co-on { stroke-width: 2.6; }
-#pmap .subs, #pmap .callouts { animation: pz-in .35s ease-out; }
+#pmap .subs, #pmap .sub-areas, #pmap .callouts { animation: pz-in .35s ease-out; }
 @keyframes pz-in { from { opacity: 0; } }
-/* theme hints inside a zoomed category: small, italic, muted words, not categories and not controls */
-#pmap .subs { pointer-events: none; }
+/* the subgroups inside a zoomed category (finder.js drawSubs): a faint tint of the category's colour behind each
+   one's dots, and its name in small italics at the top of it; not categories and not controls */
+#pmap .subs, #pmap .sub-areas { pointer-events: none; }
+#pmap .sub-a { fill-opacity: .07; stroke-opacity: .3; stroke-width: 1; vector-effect: non-scaling-stroke; }
 #pmap .sub {
-  font: italic 11.5px Georgia, serif; font-size: calc(11.5px * var(--u, 1)); fill: #8a7a66; letter-spacing: .03em;
+  font: italic 11.5px Georgia, serif; font-size: calc(11.5px * var(--u, 1)); letter-spacing: .02em;
   paint-order: stroke; stroke: #fffdf4; stroke-width: calc(3px * var(--u, 1)); stroke-linejoin: round;
 }
-#pmap.compact .sub { font-size: calc(10.5px * var(--u, 1)); }
+#pmap .sub-hr { fill: #5e4f3e; }
+#pmap .sub-tight { stroke-width: calc(4px * var(--u, 1)); }    /* a name running a little into its sub-area: a wider halo over the dots */
+#pmap .sub-en { fill: #8a7a66; }
+html.show-en #pmap .sub-en { fill: #5e4f3e; }
 #pmap .co-line { stroke: #8a7a66; stroke-width: 1; vector-effect: non-scaling-stroke; fill: none; }
 #pmap .co-t {
   font-family: Georgia, serif; paint-order: stroke; stroke: #fffdf4; stroke-width: calc(3.5px * var(--u, 1)); stroke-linejoin: round;
@@ -519,7 +526,7 @@ html.show-en #pmap .co-en { font-size: calc(13.5px * var(--u, 1)); font-style: n
 #pmap .co-hit { fill: #fffdf4; fill-opacity: 0; }
 #pmap .co-badge { fill: #fffaf0; stroke: var(--ink); stroke-width: 1; vector-effect: non-scaling-stroke; }
 #pmap .co-num { font: bold 11px Georgia, serif; font-size: calc(11px * var(--u, 1)); fill: var(--ink); }
-@media (prefers-reduced-motion: reduce) { #pmap .subs, #pmap .callouts { animation: none; } }
+@media (prefers-reduced-motion: reduce) { #pmap .subs, #pmap .sub-areas, #pmap .callouts { animation: none; } }
 
 /* ---------- wall calendar ---------- */
 .wcal { max-width: 560px; margin: 16px auto 6px; }
@@ -997,8 +1004,7 @@ h1.cap, .h1-en.cap { font-size: 17px; line-height: 1.4; color: var(--ink-soft); 
   body { padding: 0; font: 11.5pt/1.45 Georgia, "Times New Roman", Times, serif; }
   .page { border: 0; box-shadow: none; max-width: none; background: #fff; }
   .skip, .topbar, .langsw, .nav, .nav2, .nav-toggle, .vez, .pager, .lang-bar, .masthead,
-  .foot-cols, .foot-bottom, .discover, .memory, .qnav, .wcal, .pform, .pmapwrap, .plegend, .pzoom-info, .yt-wrap,
-  .paper-note, .kitty, .heart-drop, #tm2003, .bday-banner, .sg-top, noscript { display: none !important; }
+  .foot-cols, .foot-bottom, .discover, .memory, .qnav, .wcal, .pform, .pmapwrap,   .paper-note, .kitty, .heart-drop, #tm2003, .bday-banner, .sg-top, noscript { display: none !important; }
   main { padding: 0; }
   .foot { border: 0; background: none; margin-top: 10mm; padding: 0; font-size: 9pt; color: #444; }
   .foot-mem { font-size: 9pt; color: #444; text-align: left; padding: 0; border-top: 1px solid #999; padding-top: 2mm; }
@@ -1109,11 +1115,50 @@ html.show-en .wcal-months button small { font-size: 12.5px; font-style: normal; 
 html.show-en .wcal-dow span small { font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; font-style: normal; }
 html.show-en .wcal-title { display: flex; justify-content: center; align-items: baseline; gap: .3em; }
 html.show-en .wcal-title small { order: -1; font-size: inherit; font-style: normal; font-variant: small-caps; letter-spacing: .06em; opacity: 1; }
-html.show-en .dbox-t i, html.show-en .dform button i, html.show-en .pchips button i, html.show-en .plegend i,
-html.show-en .phone-hello i { font-size: inherit; font-style: normal; color: inherit; }
+html.show-en .dbox-t i, html.show-en .dform button i, html.show-en .pchips button i, html.show-en html.show-en .phone-hello i { font-size: inherit; font-style: normal; color: inherit; }
 html.show-en .phone-hello i { display: inline; font-family: inherit; }
 html.show-en #tm2003 .tm-banner i, html.show-en #tm2003 .tm-back i { font-weight: bold; font-style: normal; }
 html.show-hr .paper-note-cols, html.show-en .paper-note-cols { grid-template-columns: 1fr; }
 html.show-hr .paper-note-cols > div + div, html.show-en .paper-note-cols > div + div { border-left: 0; padding-left: 0; font-style: normal; }
 html.show-en #pmap .reg-en { font-size: 20px; font-weight: bold; fill: #4a3b2c; }
 @media (max-width: 760px) { html.show-en #pmap .reg-en { font-size: 26px; } }
+
+/* the visitor counter: one quiet typed line at the very bottom; opening it unrolls a typed tally sheet */
+.brojac { margin: 6px 16px 0; text-align: center; font: 12px/1.5 "Courier Prime", "Courier New", Courier, monospace; color: var(--ink-soft); }
+.brojac summary { display: inline-block; cursor: pointer; list-style: none; padding: 1px 6px; border-bottom: 1px dashed transparent; }
+.brojac summary::-webkit-details-marker { display: none; }
+.brojac summary::before { content: "\25B8\00A0"; color: var(--red-soft); }
+.brojac details[open] summary::before { content: "\25BE\00A0"; }
+.brojac summary:hover, .brojac summary:focus-visible { border-bottom-color: var(--rule); color: var(--ink); }
+.brojac [lang="en"] { font-style: normal; }
+.brojac-sheet {
+  position: relative; max-width: 430px; margin: 10px auto 4px; padding: 16px 22px 12px; text-align: left;
+  transform: rotate(-.4deg); color: #231d17;
+  font: 13.5px/1.55 "Special Elite", "Courier Prime", "Courier New", Courier, monospace;
+  background:
+    radial-gradient(ellipse at 18% 12%, rgba(255,255,255,.55), transparent 55%),
+    repeating-linear-gradient(0deg, rgba(120,95,50,.022) 0 1px, transparent 1px 3px),
+    #fbf6e9;
+  box-shadow: 0 0 0 1px rgba(150,125,85,.18), 0 2px 3px rgba(60,45,20,.12), 0 8px 18px rgba(60,45,20,.16);
+}
+.brojac-head { margin: 0 0 8px !important; text-align: center; letter-spacing: .12em; text-transform: uppercase; }
+.brojac-head small { display: block; letter-spacing: 0; text-transform: none; color: #5d4f40; }
+.brojac-head > span[lang="en"] { display: inline !important; }
+.brojac-list, .brojac-list ul { list-style: none; margin: 0; padding: 0; }
+.brojac-list li { display: flex; align-items: baseline; gap: 4px; margin: 0; }
+.brojac-list li.brojac-sub { display: block; margin: 0 0 4px 2.2em; font-size: 12.5px; color: #4a3f33; }
+.brojac-dots { flex: 1; min-width: 1.5em; border-bottom: 2px dotted rgba(35,29,23,.45); transform: translateY(-4px); }
+.brojac-n { font-variant-numeric: tabular-nums; }
+.brojac-hr .brojac-name { font-weight: bold; }
+.brojac-name [lang="en"] { color: #5d4f40; }
+.brojac-list li.brojac-sub { margin-left: 0; }
+.brojac-map { margin: 4px 0 6px; }
+.brojac-map svg { display: block; width: 100%; max-width: 300px; height: auto; margin: 0 auto; overflow: visible; }
+.brojac li a::before { content: none; }
+.brojac-map path { stroke: #4a3f33; stroke-width: .7; stroke-linejoin: round; cursor: pointer; outline: none; transition: fill .15s; }
+.brojac-map path.on, .brojac-map path:focus-visible { stroke: #231d17; stroke-width: 1.8; }
+.brojac-valpovo { fill: var(--red); stroke: #fbf6e9; stroke-width: 1; pointer-events: none; }
+.brojac-valpovo-t { font: 12px "Special Elite", "Courier Prime", "Courier New", monospace; fill: var(--red); pointer-events: none; paint-order: stroke; stroke: #fbf6e9; stroke-width: 3px; }
+.brojac-cap { display: flex; align-items: baseline; gap: 4px; margin: 4px 0 0 !important; min-height: 1.5em; font-size: 13px; color: #231d17; }
+.brojac-osm { margin: 0 !important; text-align: right; font-size: 9.5px; color: #8a7b68; }
+.brojac-osm a { color: inherit; }
