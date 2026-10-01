@@ -1,7 +1,7 @@
 /* Easter eggs. Hidden, but not too hard to find:
    1. type  p o e t a  (or click the feather quill three times)  -> a time machine back to his 2003 homepage
    2. type  m a c a                                             -> a kitten strolls by, purrs and recites
-   3. click his phone number in any Radio burza ad             -> the old phone rings, "Halo, Ivo ovdje!"
+   3. click his phone number in any Radio burza ad             -> the old phone rings, "Molim? Ivica pri telefonu."
    4. click the red heart in the header five times              -> a rain of hearts and a love poem       */
 (function () {
   "use strict";
@@ -26,7 +26,7 @@
     s.onerror = done;                          // offline: the eggs still hatch, just without their verses
     document.head.appendChild(s);
   }
-  function preload() { withData(function () {}); }
+  function preload() { typeface(); withData(function () {}); }
   var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function esc(s) {
@@ -121,22 +121,35 @@
     if ((e.key === "Escape" || e.key === "Esc") && stack.length) { e.preventDefault(); stack[stack.length - 1].close(); }
   });
 
-  /* ---------- a little Windows-95-ish window ---------- */
-  function win(title, html, cls, bar) {    // title: [hr, en, both-mode]; bar: the title bar's HTML (default: both, with " · ")
+  /* ---------- a typed note on paper (he wrote on a typewriter, so the eggs' pop-ups look typed) ---------- */
+  var typeface = function () {     // the typewriter face, fetched from Google Fonts only when the first egg hatches
+    typeface = function () {};
+    var l = document.createElement("link");
+    l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=Special+Elite&display=swap";
+    document.head.appendChild(l);
+  };
+  function win(title, html, cls, head) {   // title: [hr, en, both-mode]; head: the typed heading's HTML (default: both, with " · ")
+    typeface();
     var w = document.createElement("div");
-    w.className = "w95 " + (cls || "");
-    w.innerHTML = '<div class="w95-bar"><span>' + (bar || bi(esc(title[0]), esc(title[1]))) + '</span><button type="button">&#10005;</button></div>' +
-      '<div class="w95-body">' + html + "</div>";
-    langAttr(w.querySelector(".w95-bar button"), "aria-label", "Zatvori", "Close");
+    w.className = "paper-note " + (cls || "");
+    w.innerHTML = '<div class="paper-note-top"><p class="paper-note-head">' + (head || bi(esc(title[0]), esc(title[1]))) + "</p>" +
+      '<button type="button" class="paper-note-x"><span aria-hidden="true">&times;</span> ' + bi("zatvori", "close") + "</button></div>" +
+      '<div class="paper-note-body">' + html + "</div>" +
+      '<div class="paper-note-foot"><button type="button" class="paper-note-close">' + bi("Zatvori", "Close") + "</button></div>";
+    var link = w.querySelector(".paper-note-body .paper-note-link");      // "Read the whole poem" sits beside the second close
+    if (link) w.querySelector(".paper-note-foot").appendChild(link);
+    langAttr(w.querySelector(".paper-note-x"), "aria-label", "Zatvori", "Close");
     document.body.appendChild(w);
     var d = openDialog(w, title);
-    w.querySelector(".w95-bar button").addEventListener("click", d.close);
+    w.querySelector(".paper-note-x").addEventListener("click", d.close);
+    w.querySelector(".paper-note-close").addEventListener("click", d.close);
     return w;
   }
   function excerpt(x) {
-    return '<div class="w95-cols"><div lang="hr"><b>' + esc(x.th) + "</b><p>" + x.hr.map(esc).join("<br>") + "</p></div>" +
+    return '<div class="paper-note-cols"><div lang="hr"><b>' + esc(x.th) + "</b><p>" + x.hr.map(esc).join("<br>") + "</p></div>" +
       '<div lang="en"><b>' + esc(x.te) + "</b><p>" + x.en.map(esc).join("<br>") + "</p></div></div>" +
-      '<p class="w95-link"><a href="' + ROOT + "pjesme/" + x.s + '.html">' + bi("Pročitaj cijelu pjesmu", "<i>Read the whole poem</i>") + " &rarr;</a></p>";
+      '<p class="paper-note-link"><a href="' + ROOT + "pjesme/" + x.s + '.html">' + bi("Pročitaj cijelu pjesmu", "<i>Read the whole poem</i>") + " &rarr;</a></p>";
   }
 
   /* ---------- 1. time machine to 2003 ---------- */
@@ -234,17 +247,17 @@
 
   /* ---------- 3. the phone ---------- */
   function phone(el) {
-    if (document.querySelector(".w95.phone-win")) return;
+    if (document.querySelector(".paper-note.phone-win")) return;
     preload();
     ring(2);
     el.classList.add("ringing");
     setTimeout(function () { el.classList.remove("ringing"); }, 3400);
     setTimeout(function () { withData(function () {
-      if (document.querySelector(".w95.phone-win")) return;
+      if (document.querySelector(".paper-note.phone-win")) return;
       var ad = pickOne(E.ads.length ? E.ads : [{ s: "podaci-o-pjesniku", th: "", te: "", hr: [], en: [] }]);
       win(["Radio burza · 031/652-821", "Radio ads · 031/652-821", "Radio burza · 031/652-821"],
-        '<p class="phone-hello">&#9742; <span lang="hr">Halo, Ivo ovdje!</span> <i lang="en">Hello, Ivo speaking!</i></p>' +
-        '<p class="w95-small">' + bi("Imam nešto za vas…", "<i>I have something for you…</i>") + "</p>" + excerpt(ad), "phone-win",
+        '<p class="phone-hello">&#9742; <span lang="hr">Molim? Ivica pri telefonu.</span> <i lang="en">Hello? Ivica speaking.</i></p>' +
+        '<p class="paper-note-small">' + bi("Imam nešto za vas…", "<i>I have something for you…</i>") + "</p>" + excerpt(ad), "phone-win",
         '<span lang="hr">Radio burza</span><span lang="en" class="solo">Radio ads</span> · 031/652-821');
     }); }, 2300);
   }
@@ -268,7 +281,7 @@
       }
     }
     setTimeout(function () { withData(function () {
-      if (!E.love.length || document.querySelector(".w95.love-win")) return;
+      if (!E.love.length || document.querySelector(".paper-note.love-win")) return;
       win(["Ljubavna pjesma", "A love poem"], excerpt(pickOne(E.love)), "love-win");
     }); }, calm ? 0 : 1600);
   }
