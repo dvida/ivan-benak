@@ -28,6 +28,9 @@
     var sel = ATTRS.map(function (a) { return "[data-" + a + "-hr]"; }).join(",");
     var els = root.querySelectorAll ? Array.prototype.slice.call(root.querySelectorAll(sel)) : [];
     if (root.matches && root.matches(sel)) els.push(root);
+    // <html data-title-hr/-en> holds the tab title (setLang), not a tooltip: a title attribute there would show over every element
+    els = els.filter(function (el) { return el !== document.documentElement; });
+    document.documentElement.removeAttribute("title");
     for (var i = 0; i < els.length; i++) {
       for (var j = 0; j < ATTRS.length; j++) {
         var a = ATTRS[j], el = els[i];
