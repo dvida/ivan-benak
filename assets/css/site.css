@@ -638,11 +638,12 @@ html.show-en #pmap .co-en { font-size: calc(13.5px * var(--u, 1)); font-style: n
   .ng ul { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
   .ng a { font-size: 14px; }
 }
-/* tighter so Home + both groups fit on one line on desktop */
-.nav2 { gap: 8px; padding: 9px 8px 10px; }
+/* tighter so Home + both groups fit on one line on desktop, in both-mode too (there the English line under
+   "Misao dana", "Thought of the day", is the widest item); keep ~20 px to spare when changing these */
+.nav2 { gap: 6px; padding: 9px 8px 10px; }
 .ng { padding: 0 5px 5px; }
 .ng ul { gap: 4px; }
-.ng a { padding: 2px 7px 3px; font-size: 14px; }
+.ng a { padding: 2px 6px 3px; font-size: 14px; }
 .ng-home { min-width: 84px; padding: 4px 8px; font-size: 14.5px; }
 /* phones: the menu folds behind a button only when JS is running (html.js, set in <head>) */
 .nav-toggle { display: none; }
