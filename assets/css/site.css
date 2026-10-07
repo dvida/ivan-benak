@@ -1176,3 +1176,8 @@ html.show-en #pmap .reg-en { font-size: 20px; font-weight: bold; fill: #4a3b2c; 
 .brojac-cap { display: flex; align-items: baseline; gap: 4px; margin: 4px 0 0 !important; min-height: 1.5em; font-size: 13px; color: #231d17; }
 .brojac-osm { margin: 0 !important; text-align: right; font-size: 9.5px; color: #8a7b68; }
 .brojac-osm a { color: inherit; }
+
+/* a book's imprint, as printed (book pages) */
+dl.imprint { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 6px 0 4px; font-size: 15px; }
+dl.imprint dt { color: var(--ink-soft); font-style: normal; }
+dl.imprint dd { margin: 0; }
